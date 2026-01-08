@@ -1,0 +1,155 @@
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, Github, Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useLanguage } from '@/contexts/LanguageContext';
+
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+  const { language, setLanguage, t } = useLanguage();
+
+  const navLinks = [
+    { path: '/', label: t('nav.home') },
+    { path: '/how-it-works', label: t('nav.howItWorks') },
+    { path: '/features', label: t('nav.features') },
+    { path: '/demo', label: t('nav.demo') },
+    { path: '/style-guide', label: t('nav.styleGuide') },
+  ];
+
+  const isActive = (path: string) => location.pathname === path;
+
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50">
+      <div className="glass-panel mx-4 mt-4 md:mx-8">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center group-hover:border-primary/50 transition-colors">
+                <span className="text-primary font-mono text-sm font-bold">S</span>
+              </div>
+              <span className="font-display font-semibold text-lg text-foreground">
+                Sidekick<span className="text-primary">.ai</span>
+              </span>
+            </Link>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    isActive(link.path)
+                      ? 'text-primary bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Right side actions */}
+            <div className="hidden md:flex items-center gap-3">
+              {/* Language Selector */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+                    <Globe className="w-4 h-4" />
+                    <span className="font-mono text-xs uppercase">{language}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="glass-panel border-border/50">
+                  <DropdownMenuItem onClick={() => setLanguage('en')} className="cursor-pointer">
+                    <span className="font-mono text-xs mr-2">EN</span> English
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('hi')} className="cursor-pointer">
+                    <span className="font-mono text-xs mr-2">HI</span> हिन्दी
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('es')} className="cursor-pointer">
+                    <span className="font-mono text-xs mr-2">ES</span> Español
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <a
+                href="https://github.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Github className="w-5 h-5" />
+              </a>
+
+              <Link to="/signup">
+                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 border-glow">
+                  {t('nav.getAccess')}
+                </Button>
+              </Link>
+            </div>
+
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="md:hidden p-2 text-muted-foreground hover:text-foreground"
+            >
+              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {/* Mobile Navigation */}
+          {isOpen && (
+            <div className="md:hidden py-4 border-t border-border/50">
+              <div className="flex flex-col gap-2">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={() => setIsOpen(false)}
+                    className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                      isActive(link.path)
+                        ? 'text-primary bg-primary/10'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                <div className="flex items-center gap-3 px-4 pt-4 border-t border-border/50 mt-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="gap-2">
+                        <Globe className="w-4 h-4" />
+                        <span className="font-mono text-xs uppercase">{language}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="glass-panel border-border/50">
+                      <DropdownMenuItem onClick={() => setLanguage('en')}>English</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLanguage('hi')}>हिन्दी</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLanguage('es')}>Español</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Link to="/signup" className="flex-1">
+                    <Button size="sm" className="w-full bg-primary text-primary-foreground">
+                      {t('nav.getAccess')}
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+export default Navbar;
