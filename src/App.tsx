@@ -11,6 +11,7 @@ import Demo from "./pages/Demo";
 import Signup from "./pages/Signup";
 import StyleGuide from "./pages/StyleGuide";
 import Animations from "./pages/Animations";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/style-guide" element={<StyleGuide />} />
             <Route path="/animations" element={<Animations />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -89,7 +89,7 @@ const Navbar = () => {
                 <Github className="w-5 h-5" />
               </a>
 
-              <Link to="/signup">
+              <Link to="/auth">
                 <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 border-glow">
                   {t('nav.getAccess')}
                 </Button>
@@ -137,7 +137,7 @@ const Navbar = () => {
                       <DropdownMenuItem onClick={() => setLanguage('es')}>Español</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <Link to="/signup" className="flex-1">
+                  <Link to="/auth" className="flex-1">
                     <Button size="sm" className="w-full bg-primary text-primary-foreground">
                       {t('nav.getAccess')}
                     </Button>
