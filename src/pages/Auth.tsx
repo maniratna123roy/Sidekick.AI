@@ -109,16 +109,14 @@ const Auth = () => {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth`,
-          // In embedded previews, cookies can be blocked in iframes.
-          // Getting the URL and redirecting the TOP window avoids "OAuth state missing".
           skipBrowserRedirect: true,
         },
       });
       if (error) throw error;
       if (!data?.url) throw new Error('No OAuth URL returned');
 
-      const targetWindow = window.top ?? window;
-      targetWindow.location.href = data.url;
+      // Open in the same window - this avoids cross-origin iframe restrictions
+      window.location.href = data.url;
     } catch (error: any) {
       toast({
         title: 'Google sign-in error',
