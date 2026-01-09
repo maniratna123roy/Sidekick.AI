@@ -117,11 +117,11 @@ const Demo = () => {
               className="text-2xl md:text-4xl font-bold text-foreground mb-6"
             />
             <p className="text-muted-foreground mb-8">
-              Connect your own repositories and unlock the complete power of Sidekick.ai
+              Sign in to connect your own repositories and unlock the complete power of Sidekick.ai
             </p>
-            <Link to="/signup">
+            <Link to="/auth">
               <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 border-glow gap-2 px-10 h-12">
-                Request Early Access
+                Sign In
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
