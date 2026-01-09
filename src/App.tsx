@@ -8,7 +8,6 @@ import Index from "./pages/Index";
 import HowItWorks from "./pages/HowItWorks";
 import Features from "./pages/Features";
 import Demo from "./pages/Demo";
-import Signup from "./pages/Signup";
 import StyleGuide from "./pages/StyleGuide";
 import Animations from "./pages/Animations";
 import Auth from "./pages/Auth";
@@ -28,7 +27,6 @@ const App = () => (
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/features" element={<Features />} />
             <Route path="/demo" element={<Demo />} />
-            <Route path="/signup" element={<Signup />} />
             <Route path="/style-guide" element={<StyleGuide />} />
             <Route path="/animations" element={<Animations />} />
             <Route path="/auth" element={<Auth />} />

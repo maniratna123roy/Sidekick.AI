@@ -89,7 +89,7 @@ const Index = () => {
           {/* CTA Buttons */}
           <ScrollReveal delay={800}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/signup">
+              <Link to="/demo">
                 <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 border-glow gap-2 px-8 h-12">
                   {t('hero.cta')}
                   <ArrowRight className="w-4 h-4" />
@@ -236,9 +236,9 @@ const Index = () => {
                 <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
                   Join thousands of developers using Sidekick to understand complex repositories in seconds.
                 </p>
-                <Link to="/signup">
+                <Link to="/demo">
                   <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 border-glow gap-2 px-10 h-12">
-                    Get Early Access
+                    Try It Now
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>

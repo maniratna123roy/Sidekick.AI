@@ -17,7 +17,7 @@ const translations: Translations = {
   'nav.features': { en: 'Features', hi: 'विशेषताएं', es: 'Características' },
   'nav.demo': { en: 'Demo', hi: 'डेमो', es: 'Demo' },
   'nav.styleGuide': { en: 'Style Guide', hi: 'स्टाइल गाइड', es: 'Guía de Estilo' },
-  'nav.getAccess': { en: 'Get Access', hi: 'एक्सेस पाएं', es: 'Obtener Acceso' },
+  'nav.signIn': { en: 'Sign In', hi: 'साइन इन', es: 'Iniciar Sesión' },
 
   // Hero
   'hero.tagline': { en: 'AI-Powered Code Intelligence', hi: 'AI-संचालित कोड बुद्धिमत्ता', es: 'Inteligencia de Código con IA' },
