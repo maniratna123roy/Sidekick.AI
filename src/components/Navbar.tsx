@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Github, Globe } from 'lucide-react';
+import { Menu, X, Github, Globe, LayoutDashboard, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,13 +15,29 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { language, setLanguage, t } = useLanguage();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
 
   const navLinks = [
     { path: '/', label: t('nav.home') },
     { path: '/how-it-works', label: t('nav.howItWorks') },
     { path: '/features', label: t('nav.features') },
     { path: '/demo', label: t('nav.demo') },
-    { path: '/style-guide', label: t('nav.styleGuide') },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -46,15 +63,25 @@ const Navbar = () => {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    isActive(link.path)
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(link.path)
                       ? 'text-primary bg-primary/10'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  }`}
+                    }`}
                 >
                   {link.label}
                 </Link>
               ))}
+              {user && (
+                <Link
+                  to="/dashboard"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive('/dashboard')
+                      ? 'text-primary bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    }`}
+                >
+                  Dashboard
+                </Link>
+              )}
             </div>
 
             {/* Right side actions */}
@@ -89,11 +116,33 @@ const Navbar = () => {
                 <Github className="w-5 h-5" />
               </a>
 
-              <Link to="/auth">
-                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 border-glow">
-                  {t('nav.signIn')}
-                </Button>
-              </Link>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" className="bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30">
+                      <span className="mr-2">{user.email?.split('@')[0]}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="glass-panel border-border/50">
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard" className="cursor-pointer">
+                        <LayoutDashboard className="w-4 h-4 mr-2" />
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link to="/auth">
+                  <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 border-glow">
+                    {t('nav.signIn')}
+                  </Button>
+                </Link>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -114,15 +163,26 @@ const Navbar = () => {
                     key={link.path}
                     to={link.path}
                     onClick={() => setIsOpen(false)}
-                    className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                      isActive(link.path)
+                    className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive(link.path)
                         ? 'text-primary bg-primary/10'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                    }`}
+                      }`}
                   >
                     {link.label}
                   </Link>
                 ))}
+                {user && (
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setIsOpen(false)}
+                    className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive('/dashboard')
+                        ? 'text-primary bg-primary/10'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                      }`}
+                  >
+                    Dashboard
+                  </Link>
+                )}
                 <div className="flex items-center gap-3 px-4 pt-4 border-t border-border/50 mt-2">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -137,11 +197,18 @@ const Navbar = () => {
                       <DropdownMenuItem onClick={() => setLanguage('es')}>Español</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <Link to="/auth" className="flex-1">
-                    <Button size="sm" className="w-full bg-primary text-primary-foreground">
-                      {t('nav.signIn')}
+
+                  {user ? (
+                    <Button size="sm" onClick={handleSignOut} variant="ghost" className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10">
+                      Sign Out
                     </Button>
-                  </Link>
+                  ) : (
+                    <Link to="/auth" className="flex-1">
+                      <Button size="sm" className="w-full bg-primary text-primary-foreground">
+                        {t('nav.signIn')}
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>

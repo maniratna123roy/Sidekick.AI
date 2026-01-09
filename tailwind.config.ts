@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Space Grotesk', 'sans-serif'],
-        display: ['Space Grotesk', 'sans-serif'],
-        mono: ['Geist Mono', 'SF Mono', 'Fira Code', 'monospace'],
+        sans: ['Inter', 'sans-serif'],
+        display: ['Inter', 'sans-serif'],
+        mono: ['Courier New', 'Menlo', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",
