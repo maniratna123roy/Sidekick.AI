@@ -91,8 +91,87 @@ function chunkCode(filePath, content, repoName) {
     return chunks;
 }
 
+/**
+ * Simple dependency extraction using regex for JS/TS
+ * @param {string} repoPath 
+ * @returns {Promise<Object>} - Nodes and Edges for graph
+ */
+async function getDependencyGraph(repoPath) {
+    const files = await glob('**/*.{js,ts,jsx,tsx}', {
+        cwd: repoPath,
+        ignore: ['**/node_modules/**', '**/dist/**', '**/build/**']
+    });
+
+    const nodes = [];
+    const edges = [];
+    const fileToId = new Map();
+
+    // Create nodes
+    files.forEach((file, index) => {
+        const id = `n${index}`;
+        nodes.push({ id, label: file, path: file });
+        fileToId.set(file, id);
+    });
+
+    // Extract basic imports
+    for (const file of files) {
+        const fullPath = path.join(repoPath, file);
+        const content = fs.readFileSync(fullPath, 'utf-8');
+        const sourceId = fileToId.get(file);
+
+        // Match import { ... } from './path' or import './path'
+        const importRegex = /from\s+['"]([^'"]+)['"]|import\s+['"]([^'"]+)['"]/g;
+        let match;
+        while ((match = importRegex.exec(content)) !== null) {
+            const importPath = match[1] || match[2];
+            if (importPath && importPath.startsWith('.')) {
+                // Try to resolve the path
+                const resolved = path.join(path.dirname(file), importPath).replace(/\\/g, '/');
+                // Basic matching (ignoring extension diffs for now)
+                for (const [targetPath, targetId] of fileToId.entries()) {
+                    if (targetPath.startsWith(resolved)) {
+                        edges.push({ source: sourceId, target: targetId });
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return { nodes, edges };
+}
+
+/**
+ * List all files in the repository (excluding ignored)
+ * @param {string} repoPath 
+ * @returns {Promise<string[]>}
+ */
+async function getRepoFiles(repoPath) {
+    const files = await glob('**/*', {
+        cwd: repoPath,
+        ignore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.git/**'],
+        nodir: true
+    });
+    return files;
+}
+
+/**
+ * Get content of a specific file
+ * @param {string} repoPath 
+ * @param {string} relativePath 
+ * @returns {string}
+ */
+function getFileContent(repoPath, relativePath) {
+    const fullPath = path.join(repoPath, relativePath);
+    if (!fs.existsSync(fullPath)) throw new Error("File not found");
+    return fs.readFileSync(fullPath, 'utf-8');
+}
+
 module.exports = {
     cloneRepository,
     getCodeFiles,
-    chunkCode
+    chunkCode,
+    getDependencyGraph,
+    getRepoFiles,
+    getFileContent
 };

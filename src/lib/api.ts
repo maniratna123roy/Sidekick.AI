@@ -25,5 +25,26 @@ export const api = {
             throw new Error(error.details || error.error || 'Chat failed');
         }
         return response.json();
+    },
+
+    getGraph: async (repoName: string) => {
+        const response = await fetch(`${API_URL}/graph?repoName=${repoName}`);
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.details || error.error || 'Failed to fetch graph');
+        }
+        return response.json();
+    },
+
+    getFiles: async (repoName: string) => {
+        const response = await fetch(`${API_URL}/files?repoName=${repoName}`);
+        if (!response.ok) throw new Error('Failed to fetch files');
+        return response.json();
+    },
+
+    getFileContent: async (repoName: string, path: string) => {
+        const response = await fetch(`${API_URL}/file-content?repoName=${repoName}&path=${encodeURIComponent(path)}`);
+        if (!response.ok) throw new Error('Failed to fetch file content');
+        return response.json();
     }
 };

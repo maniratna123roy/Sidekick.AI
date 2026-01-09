@@ -31,7 +31,14 @@ const App = () => (
             <Route path="/style-guide" element={<StyleGuide />} />
             <Route path="/animations" element={<Animations />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />}>
+              <Route path="chat" element={<Dashboard activeTab="chat" />} />
+              <Route path="map" element={<Dashboard activeTab="map" />} />
+              <Route path="explorer" element={<Dashboard activeTab="explorer" />} />
+              <Route path="error" element={<Dashboard activeTab="error" />} />
+              <Route path="docs" element={<Dashboard activeTab="docs" />} />
+              <Route path="onboarding" element={<Dashboard activeTab="onboarding" />} />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
+const path = require('path');
 
-const { cloneRepository, getCodeFiles, chunkCode } = require('../services/repo');
+const { cloneRepository, getCodeFiles, chunkCode, getDependencyGraph, getRepoFiles, getFileContent } = require('../services/repo');
 const { generateEmbedding, generateResponse } = require('../services/gemini');
 const { storeVectors, searchSimilarChunks } = require('../services/pinecone');
 
@@ -78,7 +79,7 @@ router.post('/chat', async (req, res) => {
     const similarChunks = await searchSimilarChunks(queryEmbedding, repoName || undefined);
 
     // 3. Generate Answer
-    const answer = await generateResponse(query, similarChunks);
+    const answer = await generateResponse(query, similarChunks, repoName);
 
     res.json({
       answer,
@@ -93,6 +94,52 @@ router.post('/chat', async (req, res) => {
   } catch (error) {
     console.error('[Chat] Failed:', error);
     res.status(500).json({ error: 'Chat processing failed', details: error.message });
+  }
+});
+
+// GET /api/files?repoName=name
+router.get('/files', async (req, res) => {
+  const { repoName } = req.query;
+  if (!repoName) return res.status(400).json({ error: "Repo name required" });
+
+  try {
+    const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH || './repos';
+    const repoPath = path.join(REPO_STORAGE_PATH, repoName);
+    const files = await getRepoFiles(repoPath);
+    res.json({ files });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/file-content?repoName=name&path=relative/path
+router.get('/file-content', async (req, res) => {
+  const { repoName, path: filePath } = req.query;
+  if (!repoName || !filePath) return res.status(400).json({ error: "Repo name and path required" });
+
+  try {
+    const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH || './repos';
+    const repoPath = path.join(REPO_STORAGE_PATH, repoName);
+    const content = getFileContent(repoPath, filePath);
+    res.json({ content });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/graph?repoName=name
+router.get('/graph', async (req, res) => {
+  const { repoName } = req.query;
+  if (!repoName) return res.status(400).json({ error: "Repo name required" });
+
+  try {
+    const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH || './repos';
+    const repoPath = path.join(REPO_STORAGE_PATH, repoName);
+    const graph = await getDependencyGraph(repoPath);
+    res.json(graph);
+  } catch (error) {
+    console.error('[Graph] Failed:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
