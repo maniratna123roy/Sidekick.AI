@@ -4,19 +4,24 @@ import { api } from '@/lib/api';
 import MarkdownRenderer from './MarkdownRenderer';
 import { cn } from '@/lib/utils';
 
-const FileExplorerView = ({ repoName }: { repoName: string }) => {
+const FileExplorerView = ({ repoName, allRepos = [] }: { repoName: string, allRepos?: string[] }) => {
     const [files, setFiles] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
     const [fileContent, setFileContent] = useState<string | null>(null);
     const [isReadingVisible, setIsReadingVisible] = useState(false);
+    const [localRepo, setLocalRepo] = useState<string>(repoName);
+
+    useEffect(() => {
+        if (repoName) setLocalRepo(repoName);
+    }, [repoName]);
 
     useEffect(() => {
         const fetchFiles = async () => {
-            if (!repoName) return;
+            if (!localRepo) return;
             setLoading(true);
             try {
-                const response = await api.getFiles(repoName);
+                const response = await api.getFiles(localRepo);
                 setFiles(response.files.sort());
             } catch (err) {
                 console.error(err);
@@ -52,9 +57,22 @@ const FileExplorerView = ({ repoName }: { repoName: string }) => {
         <div className="h-full flex">
             {/* File Tree */}
             <div className="w-80 border-r border-white/5 flex flex-col bg-black/20 overflow-hidden">
-                <div className="p-4 border-b border-white/5 flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Repository Files</h3>
-                    <span className="text-[10px] font-mono bg-white/5 px-2 py-0.5 rounded text-primary">{files.length}</span>
+                <div className="p-4 border-b border-white/5 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Repository Files</h3>
+                        <span className="text-[10px] font-mono bg-white/5 px-2 py-0.5 rounded text-primary">{files.length}</span>
+                    </div>
+                    {allRepos.length > 0 && (
+                        <select
+                            value={localRepo}
+                            onChange={(e) => setLocalRepo(e.target.value)}
+                            className="w-full text-[10px] font-mono text-muted-foreground uppercase px-2 py-1.5 rounded-lg bg-black/40 border border-white/5 outline-none cursor-pointer hover:border-primary/30 transition-colors"
+                        >
+                            {allRepos.map(repo => (
+                                <option key={repo} value={repo} className="bg-[#0f0f0f]">{repo}</option>
+                            ))}
+                        </select>
+                    )}
                 </div>
                 <div className="flex-1 overflow-y-auto p-2">
                     {files.map((path) => (

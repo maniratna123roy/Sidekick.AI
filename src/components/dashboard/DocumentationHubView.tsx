@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { FileText, Book, Code, Shield, HelpCircle, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 
-const DocumentationHubView = ({ indexedRepos }: { indexedRepos: string[] }) => {
+const DocumentationHubView = ({ indexedRepos, initialRepo }: { indexedRepos: string[], initialRepo: string | null }) => {
     const [doc, setDoc] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [activeSection, setActiveSection] = useState('architecture');
+    const [localRepo, setLocalRepo] = useState<string | null>(initialRepo);
 
     const sections = [
         { id: 'architecture', label: 'Architecture Overview', icon: Book },
@@ -16,7 +17,7 @@ const DocumentationHubView = ({ indexedRepos }: { indexedRepos: string[] }) => {
 
     useEffect(() => {
         const fetchDoc = async () => {
-            const repo = indexedRepos[indexedRepos.length - 1];
+            const repo = localRepo || (indexedRepos.length > 0 ? indexedRepos[indexedRepos.length - 1] : null);
             if (!repo) return;
             setLoading(true);
             try {
@@ -32,26 +33,43 @@ const DocumentationHubView = ({ indexedRepos }: { indexedRepos: string[] }) => {
             }
         };
         fetchDoc();
-    }, [activeSection, indexedRepos]);
+    }, [activeSection, localRepo, indexedRepos]);
 
     return (
         <div className="h-full flex flex-col md:flex-row">
             {/* Mini Sidebar for Docs */}
-            <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-white/5 p-4 space-y-2">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 px-2">Documentation</h3>
-                {sections.map((section) => (
-                    <button
-                        key={section.id}
-                        onClick={() => setActiveSection(section.id)}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${activeSection === section.id
+            <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-white/5 p-4 space-y-4">
+                <div>
+                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 px-2">Knowledge Base</h3>
+                    {indexedRepos.length > 0 && (
+                        <select
+                            value={localRepo || ''}
+                            onChange={(e) => setLocalRepo(e.target.value)}
+                            className="w-full text-xs font-bold bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 outline-none cursor-pointer hover:border-primary/50 transition-colors"
+                        >
+                            {indexedRepos.map(repo => (
+                                <option key={repo} value={repo} className="bg-[#0f0f0f]">{repo}</option>
+                            ))}
+                        </select>
+                    )}
+                </div>
+
+                <div className="space-y-1">
+                    <h3 className="text-[10px] font-mono text-muted-foreground uppercase tracking-tighter mb-2 px-2">Sections</h3>
+                    {sections.map((section) => (
+                        <button
+                            key={section.id}
+                            onClick={() => setActiveSection(section.id)}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${activeSection === section.id
                                 ? "bg-primary/20 text-primary border border-primary/20"
                                 : "text-muted-foreground hover:bg-white/5"
-                            }`}
-                    >
-                        <section.icon className="w-4 h-4" />
-                        {section.label}
-                    </button>
-                ))}
+                                }`}
+                        >
+                            <section.icon className="w-4 h-4" />
+                            {section.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* Content Area */}

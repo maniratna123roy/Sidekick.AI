@@ -15,13 +15,19 @@ interface Message {
     sources?: any[];
 }
 
-const ChatView = ({ indexedRepos }: { indexedRepos: string[] }) => {
+const ChatView = ({ indexedRepos, initialRepo }: { indexedRepos: string[], initialRepo: string | null }) => {
     const [query, setQuery] = useState('');
     const [messages, setMessages] = useState<Message[]>([]);
     const [isChatting, setIsChatting] = useState(false);
+    const [localRepo, setLocalRepo] = useState<string | null>(initialRepo);
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    const activeRepo = indexedRepos.length > 0 ? indexedRepos[indexedRepos.length - 1] : null;
+    // Sync with initialRepo when it changes from global selector
+    useEffect(() => {
+        if (initialRepo) setLocalRepo(initialRepo);
+    }, [initialRepo]);
+
+    const activeRepo = localRepo || (indexedRepos.length > 0 ? indexedRepos[indexedRepos.length - 1] : null);
 
     useEffect(() => {
         const fetchHistory = async () => {
@@ -30,7 +36,7 @@ const ChatView = ({ indexedRepos }: { indexedRepos: string[] }) => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            const { data, error } = await supabase
+            const { data, error } = await (supabase as any)
                 .from('chat_messages')
                 .select('*')
                 .eq('user_id', user.id)
@@ -69,7 +75,7 @@ const ChatView = ({ indexedRepos }: { indexedRepos: string[] }) => {
             if (!user) throw new Error("User not authenticated");
 
             // Save user msg to DB
-            await supabase.from('chat_messages').insert([{
+            await (supabase as any).from('chat_messages').insert([{
                 user_id: user.id,
                 repo_name: activeRepo,
                 role: 'user',
@@ -86,7 +92,7 @@ const ChatView = ({ indexedRepos }: { indexedRepos: string[] }) => {
             };
 
             // Save AI msg to DB
-            await supabase.from('chat_messages').insert([{
+            await (supabase as any).from('chat_messages').insert([{
                 user_id: user.id,
                 repo_name: activeRepo,
                 role: 'assistant',
@@ -115,9 +121,17 @@ const ChatView = ({ indexedRepos }: { indexedRepos: string[] }) => {
                     <h2 className="font-bold font-display tracking-tight">AI Assistant</h2>
                 </div>
                 {indexedRepos.length > 0 && (
-                    <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground uppercase px-2 py-1 rounded-full bg-black/20 border border-white/5 leading-none">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                        Context: {indexedRepos[indexedRepos.length - 1]}
+                    <div className="flex items-center gap-2 group">
+                        <select
+                            value={localRepo || ''}
+                            onChange={(e) => setLocalRepo(e.target.value)}
+                            className="text-[10px] font-mono text-muted-foreground uppercase px-3 py-1.5 rounded-full bg-black/20 border border-white/5 hover:border-primary/50 transition-all outline-none cursor-pointer"
+                        >
+                            {indexedRepos.map(repo => (
+                                <option key={repo} value={repo} className="bg-[#0f0f0f]">{repo}</option>
+                            ))}
+                        </select>
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
                     </div>
                 )}
             </div>

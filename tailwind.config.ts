@@ -15,7 +15,6 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
-        display: ['Inter', 'sans-serif'],
         mono: ['Courier New', 'Menlo', 'monospace'],
       },
       colors: {
@@ -106,11 +105,11 @@ export default {
           "50%": { transform: "translateY(-20px)" },
         },
         "pulse-glow": {
-          "0%, 100%": { 
+          "0%, 100%": {
             opacity: "0.4",
             boxShadow: "0 0 20px hsl(174 100% 50% / 0.3)",
           },
-          "50%": { 
+          "50%": {
             opacity: "1",
             boxShadow: "0 0 40px hsl(174 100% 50% / 0.6)",
           },
@@ -136,10 +135,10 @@ export default {
           "100%": { opacity: "1", transform: "translateX(0)" },
         },
         "glow-pulse": {
-          "0%, 100%": { 
+          "0%, 100%": {
             boxShadow: "0 0 20px -5px hsl(174 100% 50% / 0.4)",
           },
-          "50%": { 
+          "50%": {
             boxShadow: "0 0 30px -5px hsl(174 100% 50% / 0.6)",
           },
         },

@@ -32,13 +32,8 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 md:gap-12">
           {/* Brand */}
           <div className="col-span-2">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center">
-                <span className="text-primary font-mono text-sm font-bold">S</span>
-              </div>
-              <span className="font-display font-semibold text-lg text-foreground">
-                Sidekick<span className="text-primary">.ai</span>
-              </span>
+            <Link to="/" className="flex items-center mb-4 group">
+              <img src="/logo.png" alt="Sidekick.ai Logo" className="h-[120px] w-auto group-hover:scale-105 transition-transform duration-300" />
             </Link>
             <p className="text-muted-foreground text-sm max-w-xs mb-6">
               {t('footer.description')}

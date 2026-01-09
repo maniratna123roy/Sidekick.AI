@@ -42,11 +42,15 @@ const Sidebar = ({ onSignOut, user }: SidebarProps) => {
             )}
         >
             {/* Logo Area */}
-            <div className="p-6 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center">
-                    <span className="text-primary font-bold">S</span>
-                </div>
-                {!collapsed && <span className="font-display font-bold text-xl tracking-tight">Sidekick.ai</span>}
+            <div className={cn("p-2 flex items-center", collapsed ? "justify-center" : "justify-start pl-4")}>
+                <img
+                    src="/logo.png"
+                    alt="Sidekick.ai Logo"
+                    className={cn(
+                        "h-24 w-auto transition-all duration-300",
+                        collapsed ? "w-12 object-cover object-left" : ""
+                    )}
+                />
             </div>
 
             {/* Profile Section */}

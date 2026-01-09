@@ -46,15 +46,10 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50">
       <div className="glass-panel mx-4 mt-4 md:mx-8">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-24">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center group-hover:border-primary/50 transition-colors">
-                <span className="text-primary font-mono text-sm font-bold">S</span>
-              </div>
-              <span className="font-display font-semibold text-lg text-foreground">
-                Sidekick<span className="text-primary">.ai</span>
-              </span>
+            <Link to="/" className="flex items-center group">
+              <img src="/logo.png" alt="Sidekick.ai Logo" className="h-[120px] w-auto group-hover:scale-105 transition-transform duration-300" />
             </Link>
 
             {/* Desktop Navigation */}
@@ -64,8 +59,8 @@ const Navbar = () => {
                   key={link.path}
                   to={link.path}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(link.path)
-                      ? 'text-primary bg-primary/10'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    ? 'text-primary bg-primary/10'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                     }`}
                 >
                   {link.label}
@@ -75,8 +70,8 @@ const Navbar = () => {
                 <Link
                   to="/dashboard"
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive('/dashboard')
-                      ? 'text-primary bg-primary/10'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    ? 'text-primary bg-primary/10'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                     }`}
                 >
                   Dashboard
@@ -164,8 +159,8 @@ const Navbar = () => {
                     to={link.path}
                     onClick={() => setIsOpen(false)}
                     className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive(link.path)
-                        ? 'text-primary bg-primary/10'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                      ? 'text-primary bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                       }`}
                   >
                     {link.label}
@@ -176,8 +171,8 @@ const Navbar = () => {
                     to="/dashboard"
                     onClick={() => setIsOpen(false)}
                     className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive('/dashboard')
-                        ? 'text-primary bg-primary/10'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                      ? 'text-primary bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                       }`}
                   >
                     Dashboard
