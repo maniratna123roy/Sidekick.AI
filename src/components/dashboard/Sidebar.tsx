@@ -4,12 +4,12 @@ import {
     Share2,
     AlertCircle,
     FileText,
-    Users,
-    Settings,
     LogOut,
     ChevronLeft,
     ChevronRight,
-    LayoutDashboard
+    LayoutDashboard,
+    BarChart3,
+    Activity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -29,9 +29,10 @@ const Sidebar = ({ onSignOut, user }: SidebarProps) => {
         { icon: LayoutDashboard, label: 'Overview', path: '/dashboard', color: 'text-primary' },
         { icon: MessageSquare, label: 'Sidekick Chat', path: '/dashboard/chat', color: 'text-blue-500' },
         { icon: Share2, label: 'Codebase Map', path: '/dashboard/map', color: 'text-purple-500' },
+        { icon: BarChart3, label: 'Repo Analytics', path: '/dashboard/analytics', color: 'text-orange-400' },
+        { icon: Activity, label: 'Logic Viz', path: '/dashboard/visualize', color: 'text-green-500' },
         { icon: AlertCircle, label: 'Error Explainer', path: '/dashboard/error', color: 'text-red-500' },
         { icon: FileText, label: 'Docs Hub', path: '/dashboard/docs', color: 'text-orange-500' },
-        { icon: Users, label: 'Onboarding', path: '/dashboard/onboarding', color: 'text-green-500' },
     ];
 
     return (

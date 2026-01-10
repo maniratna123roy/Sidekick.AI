@@ -4,8 +4,9 @@ const fs = require('fs');
 const path = require('path');
 
 const { cloneRepository, getCodeFiles, chunkCode, getDependencyGraph, getRepoFiles, getFileContent } = require('../services/repo');
-const { generateEmbedding, generateResponse } = require('../services/gemini');
+const { generateEmbedding, generateResponse, generateMermaidDiagram } = require('../services/gemini');
 const { storeVectors, searchSimilarChunks } = require('../services/pinecone');
+const { getRepositoryAnalytics } = require('../services/analytics');
 
 // Index Repository
 router.post('/index', async (req, res) => {
@@ -139,6 +140,47 @@ router.get('/graph', async (req, res) => {
     res.json(graph);
   } catch (error) {
     console.error('[Graph] Failed:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/analytics?repoName=name
+router.get('/analytics', async (req, res) => {
+  const { repoName } = req.query;
+  if (!repoName) return res.status(400).json({ error: "Repo name required" });
+
+  try {
+    const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH || './repos';
+    const repoPath = path.join(REPO_STORAGE_PATH, repoName);
+
+    if (!fs.existsSync(repoPath)) {
+      return res.status(404).json({ error: "Repository not found" });
+    }
+
+    const analytics = await getRepositoryAnalytics(repoPath);
+    res.json(analytics);
+  } catch (error) {
+    console.error('[Analytics] Failed:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/visualize
+router.post('/visualize', async (req, res) => {
+  const { repoName, filePath, type } = req.body;
+  if (!repoName || !filePath) return res.status(400).json({ error: "Repo name and file path required" });
+
+  try {
+    const REPO_STORAGE_PATH = path.resolve(__dirname, '../repos');
+    const repoPath = path.join(REPO_STORAGE_PATH, repoName);
+    const content = getFileContent(repoPath, filePath);
+
+    if (!content) throw new Error("File content is empty");
+
+    const diagram = await generateMermaidDiagram(content, type);
+    res.json({ diagram });
+  } catch (error) {
+    console.error('[Visualize] Failed:', error);
     res.status(500).json({ error: error.message });
   }
 });

@@ -46,5 +46,27 @@ export const api = {
         const response = await fetch(`${API_URL}/file-content?repoName=${repoName}&path=${encodeURIComponent(path)}`);
         if (!response.ok) throw new Error('Failed to fetch file content');
         return response.json();
+    },
+
+    getAnalytics: async (repoName: string) => {
+        const response = await fetch(`${API_URL}/analytics?repoName=${repoName}`);
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.details || error.error || 'Failed to fetch analytics');
+        }
+        return response.json();
+    },
+
+    visualizeCode: async (repoName: string, filePath: string, type: string) => {
+        const response = await fetch(`${API_URL}/visualize`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ repoName, filePath, type }),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.details || error.error || 'Visualization failed');
+        }
+        return response.json();
     }
 };

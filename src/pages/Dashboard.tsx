@@ -12,7 +12,8 @@ import {
     AlertCircle,
     TrendingUp,
     FileCode,
-    Globe
+    Globe,
+    BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,8 @@ import KnowledgeGraph from '@/components/dashboard/KnowledgeGraph';
 import ErrorExplainerView from '@/components/dashboard/ErrorExplainerView';
 import DocumentationHubView from '@/components/dashboard/DocumentationHubView';
 import FileExplorerView from '@/components/dashboard/FileExplorerView';
+import RepoAnalyticsView from '@/components/dashboard/RepoAnalyticsView';
+import LogicVizView from '@/components/dashboard/LogicVizView';
 
 const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
     const navigate = useNavigate();
@@ -235,8 +238,8 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                                             {[
                                                 { label: 'Repos Indexed', value: indexedRepos.length, icon: GitBranch, color: 'text-primary' },
                                                 { label: 'Queries Run', value: '42', icon: MessageSquare, color: 'text-blue-500' },
-                                                { label: 'Map Density', value: 'High', icon: Share2, color: 'text-purple-500' },
                                                 { label: 'Health Score', value: '98%', icon: TrendingUp, color: 'text-green-500' },
+                                                { label: 'Insights', value: 'Live', icon: BarChart3, color: 'text-orange-500' },
                                             ].map((stat) => (
                                                 <div key={stat.label} className="glass-panel p-6 rounded-2xl border-white/5 bg-white/5 hover:bg-white/10 transition-colors">
                                                     <div className="flex items-center justify-between mb-2">
@@ -336,12 +339,12 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                                                         <p className="text-[10px] text-muted-foreground uppercase font-mono">Debug stack traces instantly</p>
                                                     </div>
                                                     <div
-                                                        onClick={() => navigate('/dashboard/docs')}
+                                                        onClick={() => navigate('/dashboard/visualize')}
                                                         className="glass-panel p-6 rounded-2xl border-white/5 bg-white/5 hover:border-orange-500/30 cursor-pointer group transition-all"
                                                     >
-                                                        <Globe className="w-8 h-8 text-orange-500 mb-3 group-hover:scale-110 transition-transform" />
-                                                        <h3 className="font-bold mb-1">Doc Hub</h3>
-                                                        <p className="text-[10px] text-muted-foreground uppercase font-mono">Browse auto-generated manuals</p>
+                                                        <Share2 className="w-8 h-8 text-orange-500 mb-3 group-hover:scale-110 transition-transform" />
+                                                        <h3 className="font-bold mb-1">Logic Viz</h3>
+                                                        <p className="text-[10px] text-muted-foreground uppercase font-mono">Map code structure visually</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -355,7 +358,8 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                                         {effectiveTab === 'explorer' && <FileExplorerView repoName={globalSelectedRepo || primaryRepo} allRepos={activeRepos} />}
                                         {effectiveTab === 'error' && <ErrorExplainerView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} />}
                                         {effectiveTab === 'docs' && <DocumentationHubView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} />}
-                                        {effectiveTab === 'onboarding' && <div className="p-8 text-center text-muted-foreground pt-32 text-sm uppercase tracking-widest font-mono">Onboarding Path Builder coming soon...</div>}
+                                        {effectiveTab === 'analytics' && <RepoAnalyticsView repoName={globalSelectedRepo || primaryRepo} />}
+                                        {effectiveTab === 'visualize' && <LogicVizView repoName={globalSelectedRepo || primaryRepo} />}
                                     </div>
                                 )}
                             </motion.div>

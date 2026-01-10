@@ -37,7 +37,8 @@ const App = () => (
               <Route path="explorer" element={<Dashboard activeTab="explorer" />} />
               <Route path="error" element={<Dashboard activeTab="error" />} />
               <Route path="docs" element={<Dashboard activeTab="docs" />} />
-              <Route path="onboarding" element={<Dashboard activeTab="onboarding" />} />
+              <Route path="analytics" element={<Dashboard activeTab="analytics" />} />
+              <Route path="visualize" element={<Dashboard activeTab="visualize" />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
