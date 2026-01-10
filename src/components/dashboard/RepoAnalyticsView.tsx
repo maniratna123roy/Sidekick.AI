@@ -47,7 +47,7 @@ const RepoAnalyticsView = ({ repoName }: { repoName: string }) => {
         return (
             <div className="flex-1 flex items-center justify-center p-8">
                 <div className="text-center space-y-4 max-w-md p-8 glass-panel border-red-500/20 bg-red-500/5 rounded-2xl">
-                    <p className="text-red-400 font-mono text-sm uppercase tracking-wider italic">Analysis Failure: {error || 'No context found'}</p>
+                    <p className="text-red-400 font-mono text-sm tracking-wider italic">Analysis Failure: {error || 'No context found'}</p>
                     <p className="text-xs text-muted-foreground leading-relaxed">Ensure the repository is indexed and your sidekick is properly connected.</p>
                 </div>
             </div>
