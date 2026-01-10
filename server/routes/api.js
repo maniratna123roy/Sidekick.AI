@@ -8,6 +8,10 @@ const { generateEmbedding, generateResponse, generateMermaidDiagram } = require(
 const { storeVectors, searchSimilarChunks } = require('../services/pinecone');
 const { getRepositoryAnalytics } = require('../services/analytics');
 
+const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH
+  ? path.resolve(path.join(__dirname, '..'), process.env.REPO_STORAGE_PATH)
+  : path.join(__dirname, '../repos');
+
 // Index Repository
 router.post('/index', async (req, res) => {
   const { url } = req.body;
@@ -104,7 +108,6 @@ router.get('/files', async (req, res) => {
   if (!repoName) return res.status(400).json({ error: "Repo name required" });
 
   try {
-    const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH || './repos';
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
     const files = await getRepoFiles(repoPath);
     res.json({ files });
@@ -119,7 +122,6 @@ router.get('/file-content', async (req, res) => {
   if (!repoName || !filePath) return res.status(400).json({ error: "Repo name and path required" });
 
   try {
-    const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH || './repos';
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
     const content = getFileContent(repoPath, filePath);
     res.json({ content });
@@ -134,7 +136,6 @@ router.get('/graph', async (req, res) => {
   if (!repoName) return res.status(400).json({ error: "Repo name required" });
 
   try {
-    const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH || './repos';
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
     const graph = await getDependencyGraph(repoPath);
     res.json(graph);
@@ -150,7 +151,6 @@ router.get('/analytics', async (req, res) => {
   if (!repoName) return res.status(400).json({ error: "Repo name required" });
 
   try {
-    const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH || './repos';
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
 
     if (!fs.existsSync(repoPath)) {
@@ -171,7 +171,6 @@ router.post('/visualize', async (req, res) => {
   if (!repoName || !filePath) return res.status(400).json({ error: "Repo name and file path required" });
 
   try {
-    const REPO_STORAGE_PATH = path.resolve(__dirname, '../repos');
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
     const content = getFileContent(repoPath, filePath);
 

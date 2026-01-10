@@ -3,7 +3,9 @@ const { glob } = require('glob');
 const fs = require('fs');
 const path = require('path');
 
-const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH || './repos';
+const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH
+    ? path.resolve(path.join(__dirname, '..'), process.env.REPO_STORAGE_PATH)
+    : path.join(__dirname, '../repos');
 
 // Ensure storage path exists
 if (!fs.existsSync(REPO_STORAGE_PATH)) {
