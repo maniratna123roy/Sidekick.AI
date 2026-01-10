@@ -267,7 +267,7 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                                                             className="bg-black/20 border-white/10"
                                                             disabled={isIndexing}
                                                         />
-                                                        <Button type="submit" className="w-full bg-primary text-primary-foreground group" disabled={isIndexing || !repoUrl}>
+                                                        <Button type="submit" variant="retro-3d" className="w-full group" disabled={isIndexing || !repoUrl}>
                                                             {isIndexing ? (
                                                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                                             ) : (

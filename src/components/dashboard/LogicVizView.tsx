@@ -184,7 +184,8 @@ const LogicVizView = ({ repoName }: { repoName: string }) => {
                         <Button
                             onClick={handleGenerate}
                             disabled={!selectedFile || loading}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground self-end"
+                            variant="retro-3d"
+                            className="self-end"
                         >
                             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Activity className="w-4 h-4 mr-2" />}
                             {loading ? "Analyzing..." : "Visualize"}
@@ -237,7 +238,7 @@ const LogicVizView = ({ repoName }: { repoName: string }) => {
                                 <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest border border-white/10 px-2 py-1 rounded">
                                     Generated: {selectedFile}
                                 </span>
-                                <Button size="sm" variant="outline" onClick={downloadSVG} className="h-8 text-xs gap-2">
+                                <Button size="sm" variant="retro-3d" onClick={downloadSVG} className="h-8 text-xs gap-2">
                                     <Download className="w-3.5 h-3.5" />
                                     Export SVG
                                 </Button>

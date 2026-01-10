@@ -226,7 +226,8 @@ const Auth = () => {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 border-glow group"
+                variant="retro-3d"
+                className="w-full h-12 group"
               >
                 {loading ? (
                   'Processing...'

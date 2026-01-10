@@ -90,7 +90,7 @@ const Index = () => {
           <ScrollReveal delay={800}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/demo">
-                <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 border-glow gap-2 px-8 h-12">
+                <Button size="lg" variant="retro-3d" className="gap-2 px-8 h-12">
                   {t('hero.cta')}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -226,7 +226,7 @@ const Index = () => {
             <div className="glass-panel p-8 md:p-12 text-center relative overflow-hidden">
               {/* Decorative glow */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-              
+
               <div className="relative z-10">
                 <FunnelText
                   text="Ready to explore your codebase?"
@@ -237,7 +237,7 @@ const Index = () => {
                   Join thousands of developers using Sidekick to understand complex repositories in seconds.
                 </p>
                 <Link to="/demo">
-                  <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 border-glow gap-2 px-10 h-12">
+                  <Button size="lg" variant="retro-3d" className="gap-2 px-10 h-12">
                     Try It Now
                     <ArrowRight className="w-4 h-4" />
                   </Button>

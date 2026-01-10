@@ -133,7 +133,7 @@ const Navbar = () => {
                 </DropdownMenu>
               ) : (
                 <Link to="/auth">
-                  <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 border-glow">
+                  <Button size="sm" variant="retro-3d">
                     {t('nav.signIn')}
                   </Button>
                 </Link>
@@ -199,7 +199,7 @@ const Navbar = () => {
                     </Button>
                   ) : (
                     <Link to="/auth" className="flex-1">
-                      <Button size="sm" className="w-full bg-primary text-primary-foreground">
+                      <Button size="sm" variant="retro-3d" className="w-full">
                         {t('nav.signIn')}
                       </Button>
                     </Link>
