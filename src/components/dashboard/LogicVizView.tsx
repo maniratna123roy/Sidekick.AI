@@ -25,6 +25,7 @@ const LogicVizView = ({ repoName }: { repoName: string }) => {
     const [selectedFile, setSelectedFile] = useState<string>('');
     const [diagramType, setDiagramType] = useState<'flowchart' | 'sequence' | 'class'>('flowchart');
     const [diagram, setDiagram] = useState<string>('');
+    const [renderError, setRenderError] = useState<{ type: 'syntax' | 'import', message: string } | null>(null);
     const [loading, setLoading] = useState(false);
     const [isFetchingFiles, setIsFetchingFiles] = useState(true);
     const mermaidRef = useRef<HTMLDivElement>(null);
@@ -52,6 +53,7 @@ const LogicVizView = ({ repoName }: { repoName: string }) => {
         }
         setLoading(true);
         setDiagram('');
+        setRenderError(null);
 
         try {
             const result = await api.visualizeCode(repoName, selectedFile, diagramType);
@@ -91,21 +93,36 @@ const LogicVizView = ({ repoName }: { repoName: string }) => {
                     console.log('[LogicViz] Mermaid render successful, SVG length:', svg.length);
                     mermaidRef.current.innerHTML = svg;
                     toast.success("Visualization rendered");
+                    setRenderError(null);
                 } catch (e: any) {
                     console.error("[LogicViz] Mermaid render error:", e);
-                    console.log("[LogicViz] Failed diagram syntax:", diagram);
 
-                    // Show the raw syntax for debugging
-                    if (mermaidRef.current) {
-                        mermaidRef.current.innerHTML = `
-                            <div class="text-left p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-                                <p class="text-red-400 font-mono text-xs mb-2">❌ Mermaid Syntax Error</p>
-                                <pre class="text-xs text-white/70 overflow-auto max-h-96 whitespace-pre-wrap">${diagram}</pre>
-                                <p class="text-xs text-muted-foreground mt-2">Error: ${e.message || 'Invalid syntax'}</p>
-                            </div>
-                        `;
+                    const isImportError = e.message?.includes('Failed to fetch dynamically imported module');
+
+                    if (isImportError) {
+                        setRenderError({
+                            type: 'import',
+                            message: 'Application assets mismatch. Please refresh to load the latest version.'
+                        });
+                        toast.error("Update detected: Please refresh the page");
+                    } else {
+                        setRenderError({
+                            type: 'syntax',
+                            message: e.message || 'Invalid syntax'
+                        });
+
+                        // Show the raw syntax for debugging
+                        if (mermaidRef.current) {
+                            mermaidRef.current.innerHTML = `
+                                <div class="text-left p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                                    <p class="text-red-400 font-mono text-xs mb-2">❌ Mermaid Syntax Error</p>
+                                    <pre class="text-xs text-white/70 overflow-auto max-h-96 whitespace-pre-wrap">${diagram}</pre>
+                                    <p class="text-xs text-muted-foreground mt-2">Error: ${e.message || 'Invalid syntax'}</p>
+                                </div>
+                            `;
+                        }
+                        toast.error("Invalid Mermaid syntax. Check the error box above.");
                     }
-                    toast.error("Invalid Mermaid syntax. Check the error box above.");
                 }
             } else {
                 console.log('[LogicViz] Skipping render - diagram:', !!diagram, 'ref:', !!mermaidRef.current);
@@ -226,34 +243,53 @@ const LogicVizView = ({ repoName }: { repoName: string }) => {
                             <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
                                 Select a file from your repository and choose a diagram type to see the AI auto-generate a structural map.
                             </p>
+                        </p>
                         </motion.div>
-                    ) : (
-                        <motion.div
-                            key={`viz-${diagram.substring(0, 50)}`}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="h-full flex flex-col"
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest border border-white/10 px-2 py-1 rounded">
-                                    Generated: {selectedFile}
-                                </span>
-                                <Button size="sm" variant="retro-3d" onClick={downloadSVG} className="h-8 text-xs gap-2">
-                                    <Download className="w-3.5 h-3.5" />
-                                    Export SVG
-                                </Button>
-                            </div>
-                            <div className="flex-1 glass-panel rounded-2xl bg-white/5 border-white/5 p-8 overflow-auto flex items-center justify-center">
-                                <div
-                                    ref={mermaidRef}
-                                    className="w-full flex items-center justify-center min-h-[400px]"
-                                />
-                            </div>
-                        </motion.div>
+                ) : renderError?.type === 'import' ? (
+                <motion.div
+                    key="import-error"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="h-full flex flex-col items-center justify-center text-center p-12"
+                >
+                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
+                        <Activity className="w-8 h-8 text-red-500" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2">Update Required</h3>
+                    <p className="text-sm text-muted-foreground max-w-xs leading-relaxed mb-6">
+                        The application has been updated and your browser is holding onto old logic. Please refresh to load the latest visualizer.
+                    </p>
+                    <Button onClick={() => window.location.reload()} variant="default" className="bg-red-500 hover:bg-red-600">
+                        Refresh Page
+                    </Button>
+                </motion.div>
+                ) : (
+                <motion.div
+                    key={`viz-${diagram.substring(0, 50)}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="h-full flex flex-col"
+                >
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest border border-white/10 px-2 py-1 rounded">
+                            Generated: {selectedFile}
+                        </span>
+                        <Button size="sm" variant="retro-3d" onClick={downloadSVG} className="h-8 text-xs gap-2">
+                            <Download className="w-3.5 h-3.5" />
+                            Export SVG
+                        </Button>
+                    </div>
+                    <div className="flex-1 glass-panel rounded-2xl bg-white/5 border-white/5 p-8 overflow-auto flex items-center justify-center">
+                        <div
+                            ref={mermaidRef}
+                            className="w-full flex items-center justify-center min-h-[400px]"
+                        />
+                    </div>
+                </motion.div>
                     )}
-                </AnimatePresence>
-            </div>
+            </AnimatePresence>
         </div>
+        </div >
     );
 };
 
