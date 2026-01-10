@@ -154,7 +154,7 @@ router.get('/analytics', async (req, res) => {
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
 
     if (!fs.existsSync(repoPath)) {
-      return res.status(404).json({ error: "Repository not found" });
+      return res.status(404).json({ error: `Repository not found at ${repoPath}` });
     }
 
     const analytics = await getRepositoryAnalytics(repoPath);
