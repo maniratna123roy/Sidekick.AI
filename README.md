@@ -4,6 +4,11 @@
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
+## Deployment
+
+**Frontend (Vercel)**: https://sidekick-ai-three.vercel.app/
+**Backend (Render)**: https://sidekick-ai-zavi.onrender.com
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
