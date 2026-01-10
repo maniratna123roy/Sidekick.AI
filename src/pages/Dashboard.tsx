@@ -40,7 +40,7 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
     // Indexing State
     const [repoUrl, setRepoUrl] = useState('');
     const [isIndexing, setIsIndexing] = useState(false);
-    const [indexedRepos, setIndexedRepos] = useState<{ name: string, is_active: boolean }[]>([]);
+    const [indexedRepos, setIndexedRepos] = useState<{ name: string, url: string, is_active: boolean }[]>([]);
     const [globalSelectedRepo, setGlobalSelectedRepo] = useState<string | null>(null);
 
     useEffect(() => {
@@ -55,11 +55,11 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
             // Fetch indexed repos for this user
             const { data: repos, error } = await (supabase as any)
                 .from('indexed_repositories')
-                .select('repo_name, is_active')
+                .select('repo_name, repo_url, is_active')
                 .eq('user_id', session.user.id);
 
             if (repos && !error) {
-                const mappedRepos = repos.map((r: any) => ({ name: r.repo_name, is_active: r.is_active }));
+                const mappedRepos = repos.map((r: any) => ({ name: r.repo_name, url: r.repo_url, is_active: r.is_active }));
                 setIndexedRepos(mappedRepos);
 
                 // Set initial global selection to last active repo
@@ -122,7 +122,7 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                 title: "Indexing Complete",
                 description: `Successfully indexed ${result.repo}.`,
             });
-            setIndexedRepos(prev => [...prev, { name: result.repo, is_active: true }]);
+            setIndexedRepos(prev => [...prev, { name: result.repo, url: repoUrl, is_active: true }]);
             setGlobalSelectedRepo(result.repo);
             setRepoUrl('');
         } catch (error: any) {
@@ -358,7 +358,10 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                                         {effectiveTab === 'explorer' && <FileExplorerView repoName={globalSelectedRepo || primaryRepo} allRepos={activeRepos} />}
                                         {effectiveTab === 'error' && <ErrorExplainerView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} />}
                                         {effectiveTab === 'docs' && <DocumentationHubView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} />}
-                                        {effectiveTab === 'analytics' && <RepoAnalyticsView repoName={globalSelectedRepo || primaryRepo} />}
+                                        {effectiveTab === 'analytics' && <RepoAnalyticsView
+                                            repoName={globalSelectedRepo || primaryRepo}
+                                            repoUrl={indexedRepos.find(r => r.name === (globalSelectedRepo || primaryRepo))?.url}
+                                        />}
                                         {effectiveTab === 'visualize' && <LogicVizView repoName={globalSelectedRepo || primaryRepo} />}
                                     </div>
                                 )}

@@ -11,9 +11,10 @@ import { cn } from '@/lib/utils';
 
 const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#6366f1'];
 
-const RepoAnalyticsView = ({ repoName }: { repoName: string }) => {
+const RepoAnalyticsView = ({ repoName, repoUrl }: { repoName: string, repoUrl?: string }) => {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [restoring, setRestoring] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -25,20 +26,41 @@ const RepoAnalyticsView = ({ repoName }: { repoName: string }) => {
                 setData(result);
                 setError(null);
             } catch (err: any) {
-                setError(err.message);
+                // Auto-repair: If repo not found (ephemeral storage wiped) and we have the URL, re-index it.
+                if (err.message && err.message.toLowerCase().includes('repository not found') && repoUrl) {
+                    setRestoring(true);
+                    try {
+                        // Re-index silently
+                        await api.indexRepo(repoUrl);
+                        // Retry analytics fetch
+                        const retryResult = await api.getAnalytics(repoName);
+                        setData(retryResult);
+                        setError(null);
+                    } catch (restoreError: any) {
+                        setError(`Restoration failed: ${restoreError.message}`);
+                    } finally {
+                        setRestoring(false);
+                        setLoading(false);
+                    }
+                } else {
+                    setError(err.message);
+                    setLoading(false);
+                }
             } finally {
-                setLoading(false);
+                if (!restoring) setLoading(false);
             }
         };
 
         fetchAnalytics();
-    }, [repoName]);
+    }, [repoName, repoUrl]);
 
     if (loading) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center p-8 bg-black/40 backdrop-blur-sm">
                 <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-                <p className="text-muted-foreground font-mono animate-pulse uppercase tracking-widest text-xs">Processing Repository Bio-metrics...</p>
+                <p className="text-muted-foreground font-mono animate-pulse uppercase tracking-widest text-xs">
+                    {restoring ? `Restoring ${repoName} from Source...` : 'Processing Repository Bio-metrics...'}
+                </p>
             </div>
         );
     }
