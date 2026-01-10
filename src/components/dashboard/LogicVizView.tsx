@@ -12,6 +12,7 @@ mermaid.initialize({
     theme: 'dark',
     securityLevel: 'loose',
     fontFamily: 'JetBrains Mono, monospace',
+    suppressErrorRendering: true,
     flowchart: {
         useMaxWidth: true,
         htmlLabels: true,
@@ -79,6 +80,11 @@ const LogicVizView = ({ repoName }: { repoName: string }) => {
             if (diagram && mermaidRef.current) {
                 console.log('[LogicViz] Attempting to render diagram...');
                 try {
+                    // First, validate the syntax
+                    const parseResult = await mermaid.parse(diagram);
+                    console.log('[LogicViz] Syntax validation passed:', parseResult);
+
+                    // Then render
                     const id = `mermaid-svg-${Math.random().toString(36).substr(2, 9)}`;
                     console.log('[LogicViz] Calling mermaid.render with id:', id);
                     const { svg } = await mermaid.render(id, diagram);
@@ -99,7 +105,7 @@ const LogicVizView = ({ repoName }: { repoName: string }) => {
                             </div>
                         `;
                     }
-                    toast.error("Invalid Mermaid syntax. Check console for details.");
+                    toast.error("Invalid Mermaid syntax. Check the error box above.");
                 }
             } else {
                 console.log('[LogicViz] Skipping render - diagram:', !!diagram, 'ref:', !!mermaidRef.current);

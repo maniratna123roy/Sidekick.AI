@@ -69,21 +69,19 @@ Question: ${query}
  */
 async function generateMermaidDiagram(codeContent, type = 'flowchart') {
     try {
-        const prompt = `
-        Analyze the following code and generate a Mermaid.js ${type} diagram.
-        
-        CRITICAL RULES FOR MERMAID v11+ COMPATIBILITY:
-        1. Return ONLY the raw Mermaid.js syntax - NO explanations, NO markdown blocks.
-        2. START directly with the diagram type (e.g., "flowchart TD", "sequenceDiagram", or "classDiagram").
-        3. For flowcharts, ALWAYS use "flowchart TD" (NOT "graph TD"). This is MANDATORY.
-        4. Use ONLY "-->" for arrows. NEVER use "->" or "==>".
-        5. Node IDs must be alphanumeric (A-Z, a-z, 0-9, underscore). NO special characters.
-        6. Node labels MUST be in square brackets with quotes: NodeID["Label Text"]
-        7. Escape special characters in labels: use &quot; for quotes, &amp; for ampersand.
-        8. Each connection on a new line. NO semicolons.
-        9. Keep it simple - max 10-15 nodes for readability.
-        10. Use proper indentation for readability.
+        let specificRules = '';
+        let exampleFormat = '';
 
+        if (type === 'flowchart') {
+            specificRules = `
+        FLOWCHART-SPECIFIC RULES:
+        - ALWAYS use "flowchart TD" (NOT "graph TD")
+        - Use ONLY "-->" for arrows. NEVER use "->" or "==>"
+        - Node IDs must be alphanumeric (A-Z, a-z, 0-9, underscore)
+        - Node labels MUST be in square brackets with quotes: NodeID["Label Text"]
+        - Use curly braces for decision nodes: Decision{"Question?"}
+            `;
+            exampleFormat = `
         EXAMPLE FORMAT:
         flowchart TD
             Start["Start Process"]
@@ -95,6 +93,70 @@ async function generateMermaidDiagram(codeContent, type = 'flowchart') {
             Process --> Decision
             Decision -->|Yes| End
             Decision -->|No| Process
+            `;
+        } else if (type === 'sequence') {
+            specificRules = `
+        SEQUENCE DIAGRAM RULES:
+        - Start with "sequenceDiagram"
+        - Use "participant Name" to declare participants
+        - Use "->" or "->>" for synchronous calls
+        - Use "-->" or "-->>" for asynchronous/return calls
+        - Use "activate" and "deactivate" for lifelines
+        - Format: Participant1->>Participant2: Message text
+            `;
+            exampleFormat = `
+        EXAMPLE FORMAT:
+        sequenceDiagram
+            participant User
+            participant API
+            participant Database
+            
+            User->>API: Request data
+            activate API
+            API->>Database: Query
+            activate Database
+            Database-->>API: Results
+            deactivate Database
+            API-->>User: Response
+            deactivate API
+            `;
+        } else if (type === 'class') {
+            specificRules = `
+        CLASS DIAGRAM RULES:
+        - Start with "classDiagram"
+        - Use "class ClassName" to define classes
+        - Use "+method()" for public, "-method()" for private
+        - Use inheritance: ClassA <|-- ClassB
+        - Use composition: ClassA *-- ClassB
+            `;
+            exampleFormat = `
+        EXAMPLE FORMAT:
+        classDiagram
+            class Animal {
+                +String name
+                +int age
+                +makeSound()
+            }
+            class Dog {
+                +bark()
+            }
+            Animal <|-- Dog
+            `;
+        }
+
+        const prompt = `
+        Analyze the following code and generate a Mermaid.js ${type} diagram.
+        
+        CRITICAL RULES FOR MERMAID v11+ COMPATIBILITY:
+        1. Return ONLY the raw Mermaid.js syntax - NO explanations, NO markdown blocks.
+        2. START directly with the diagram type.
+        3. Each statement on a new line. NO semicolons.
+        4. Keep it simple - max 10-15 nodes/participants for readability.
+        5. Use proper indentation for readability.
+        6. Escape special characters in labels: use &quot; for quotes, &amp; for ampersand.
+        
+        ${specificRules}
+        ${exampleFormat}
 
         CODE TO ANALYZE:
         ${codeContent}
@@ -142,22 +204,27 @@ async function generateMermaidDiagram(codeContent, type = 'flowchart') {
         // 6. Force TD (Top-Down) orientation
         text = text.replace(/^flowchart\s+(LR|BT|RL)/i, 'flowchart TD');
 
-        // 7. Fix arrow syntax: -> to -->
-        text = text.replace(/(\w+)\s+->\s+(\w+)/g, '$1 --> $2');
-        text = text.replace(/(\w+)\s+==>\s+(\w+)/g, '$1 --> $2');
+        // 7. Fix arrow syntax ONLY for flowcharts (not sequence diagrams)
+        const isFlowchart = text.toLowerCase().startsWith('flowchart');
+        if (isFlowchart) {
+            text = text.replace(/(\w+)\s+->\s+(\w+)/g, '$1 --> $2');
+            text = text.replace(/(\w+)\s+==>\s+(\w+)/g, '$1 --> $2');
+        }
 
         // 8. Replace semicolons with newlines
         text = text.replace(/;/g, '\n');
 
-        // 9. Fix node labels - ensure proper bracket syntax
+        // 9. Fix node labels - ensure proper bracket syntax (ONLY for flowcharts)
         // Convert A[Label] to A["Label"] for safety
-        text = text.replace(/(\w+)\[([^\]"]+)\]/g, (match, id, label) => {
-            // If label doesn't have quotes, add them
-            if (!label.startsWith('"') && !label.endsWith('"')) {
-                return `${id}["${label.trim()}"]`;
-            }
-            return match;
-        });
+        if (isFlowchart) {
+            text = text.replace(/(\w+)\[([^\]"]+)\]/g, (match, id, label) => {
+                // If label doesn't have quotes, add them
+                if (!label.startsWith('"') && !label.endsWith('"')) {
+                    return `${id}["${label.trim()}"]`;
+                }
+                return match;
+            });
+        }
 
         // 10. Remove common AI explanatory text
         const endMarkers = ['\nNote:', '\nThis diagram', '\nExplanation:', '\nIn this', '\n\n---'];
