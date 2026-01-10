@@ -13,7 +13,8 @@ import {
     TrendingUp,
     FileCode,
     Globe,
-    BarChart3
+    BarChart3,
+    Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -133,6 +134,41 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
             });
         } finally {
             setIsIndexing(false);
+        }
+    };
+
+    const handleDeleteRepo = async (repoName: string) => {
+        if (!confirm(`Are you sure you want to delete ${repoName}? This cannot be undone.`)) return;
+
+        try {
+            // 1. Delete from Server
+            await api.deleteRepo(repoName);
+
+            // 2. Delete from Supabase
+            const { error } = await (supabase as any)
+                .from('indexed_repositories')
+                .delete()
+                .eq('user_id', user.id)
+                .eq('repo_name', repoName);
+
+            if (error) throw error;
+
+            // 3. Update State
+            setIndexedRepos(prev => prev.filter(r => r.name !== repoName));
+            if (globalSelectedRepo === repoName) {
+                setGlobalSelectedRepo(null);
+            }
+
+            toast({
+                title: "Repository Deleted",
+                description: `${repoName} has been removed.`,
+            });
+        } catch (error: any) {
+            toast({
+                title: "Deletion Failed",
+                description: error.message,
+                variant: "destructive",
+            });
         }
     };
 
@@ -305,72 +341,80 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                                                                             repo.is_active ? "left-4.5" : "left-0.5"
                                                                         )} />
                                                                     </button>
+                                                                    <button
+                                                                        onClick={() => handleDeleteRepo(repo.name)}
+                                                                        className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-red-400 transition-colors"
+                                                                        title="Delete Repository"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </button>
                                                                 </div>
-                                                            ))}
-                                                        </div>
+                                                                </div>
+                                                    ))}
+                                                </div>
                                                     )}
+                                            </div>
+                                        </div>
+
+                                        {/* Activity/Intro */}
+                                        <div className="lg:col-span-2 space-y-6">
+                                            <div className="glass-panel p-8 rounded-2xl border-white/5 bg-gradient-to-br from-primary/10 via-transparent to-transparent">
+                                                <h2 className="text-2xl font-bold font-display mb-2">Welcome to your AI Sidekick</h2>
+                                                <p className="text-muted-foreground text-sm max-w-md mb-6 leading-relaxed">
+                                                    Deep-dive into any codebase. Analyze dependencies, visualize logic, and debug errors with RAG-powered intelligence.
+                                                </p>
+                                                <div className="flex gap-3">
+                                                    <Button onClick={() => navigate('/dashboard/chat')} variant="outline">
+                                                        Start Chatting
+                                                    </Button>
+                                                    <Button onClick={() => navigate('/dashboard/map')} variant="outline">
+                                                        Explore Map
+                                                    </Button>
                                                 </div>
                                             </div>
 
-                                            {/* Activity/Intro */}
-                                            <div className="lg:col-span-2 space-y-6">
-                                                <div className="glass-panel p-8 rounded-2xl border-white/5 bg-gradient-to-br from-primary/10 via-transparent to-transparent">
-                                                    <h2 className="text-2xl font-bold font-display mb-2">Welcome to your AI Sidekick</h2>
-                                                    <p className="text-muted-foreground text-sm max-w-md mb-6 leading-relaxed">
-                                                        Deep-dive into any codebase. Analyze dependencies, visualize logic, and debug errors with RAG-powered intelligence.
-                                                    </p>
-                                                    <div className="flex gap-3">
-                                                        <Button onClick={() => navigate('/dashboard/chat')} variant="outline">
-                                                            Start Chatting
-                                                        </Button>
-                                                        <Button onClick={() => navigate('/dashboard/map')} variant="outline">
-                                                            Explore Map
-                                                        </Button>
-                                                    </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div
+                                                    onClick={() => navigate('/dashboard/error')}
+                                                    className="glass-panel p-6 rounded-2xl border-white/5 bg-white/5 hover:border-red-500/30 cursor-pointer group transition-all"
+                                                >
+                                                    <AlertCircle className="w-8 h-8 text-red-500 mb-3 group-hover:scale-110 transition-transform" />
+                                                    <h3 className="font-bold mb-1">Error Explainer</h3>
+                                                    <p className="text-[10px] text-muted-foreground uppercase font-mono">Debug stack traces instantly</p>
                                                 </div>
-
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div
-                                                        onClick={() => navigate('/dashboard/error')}
-                                                        className="glass-panel p-6 rounded-2xl border-white/5 bg-white/5 hover:border-red-500/30 cursor-pointer group transition-all"
-                                                    >
-                                                        <AlertCircle className="w-8 h-8 text-red-500 mb-3 group-hover:scale-110 transition-transform" />
-                                                        <h3 className="font-bold mb-1">Error Explainer</h3>
-                                                        <p className="text-[10px] text-muted-foreground uppercase font-mono">Debug stack traces instantly</p>
-                                                    </div>
-                                                    <div
-                                                        onClick={() => navigate('/dashboard/visualize')}
-                                                        className="glass-panel p-6 rounded-2xl border-white/5 bg-white/5 hover:border-orange-500/30 cursor-pointer group transition-all"
-                                                    >
-                                                        <Share2 className="w-8 h-8 text-orange-500 mb-3 group-hover:scale-110 transition-transform" />
-                                                        <h3 className="font-bold mb-1">Logic Viz</h3>
-                                                        <p className="text-[10px] text-muted-foreground uppercase font-mono">Map code structure visually</p>
-                                                    </div>
+                                                <div
+                                                    onClick={() => navigate('/dashboard/visualize')}
+                                                    className="glass-panel p-6 rounded-2xl border-white/5 bg-white/5 hover:border-orange-500/30 cursor-pointer group transition-all"
+                                                >
+                                                    <Share2 className="w-8 h-8 text-orange-500 mb-3 group-hover:scale-110 transition-transform" />
+                                                    <h3 className="font-bold mb-1">Logic Viz</h3>
+                                                    <p className="text-[10px] text-muted-foreground uppercase font-mono">Map code structure visually</p>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                ) : (
-                                    <div className="glass-panel rounded-2xl border-white/5 bg-white/5 min-h-[calc(100vh-12rem)] relative overflow-hidden flex flex-col">
-                                        {/* Subview Rendering */}
-                                        {effectiveTab === 'chat' && <ChatView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} />}
-                                        {effectiveTab === 'map' && <KnowledgeGraph repoName={globalSelectedRepo || primaryRepo} allRepos={activeRepos} />}
-                                        {effectiveTab === 'explorer' && <FileExplorerView repoName={globalSelectedRepo || primaryRepo} allRepos={activeRepos} />}
-                                        {effectiveTab === 'error' && <ErrorExplainerView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} />}
-                                        {effectiveTab === 'docs' && <DocumentationHubView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} />}
-                                        {effectiveTab === 'analytics' && <RepoAnalyticsView
-                                            repoName={globalSelectedRepo || primaryRepo}
-                                            repoUrl={indexedRepos.find(r => r.name === (globalSelectedRepo || primaryRepo))?.url}
-                                        />}
-                                        {effectiveTab === 'visualize' && <LogicVizView repoName={globalSelectedRepo || primaryRepo} />}
                                     </div>
+                            ) : (
+                            <div className="glass-panel rounded-2xl border-white/5 bg-white/5 min-h-[calc(100vh-12rem)] relative overflow-hidden flex flex-col">
+                                {/* Subview Rendering */}
+                                {effectiveTab === 'chat' && <ChatView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} />}
+                                {effectiveTab === 'map' && <KnowledgeGraph repoName={globalSelectedRepo || primaryRepo} allRepos={activeRepos} />}
+                                {effectiveTab === 'explorer' && <FileExplorerView repoName={globalSelectedRepo || primaryRepo} allRepos={activeRepos} />}
+                                {effectiveTab === 'error' && <ErrorExplainerView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} />}
+                                {effectiveTab === 'docs' && <DocumentationHubView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} />}
+                                {effectiveTab === 'analytics' && <RepoAnalyticsView
+                                    repoName={globalSelectedRepo || primaryRepo}
+                                    repoUrl={indexedRepos.find(r => r.name === (globalSelectedRepo || primaryRepo))?.url}
+                                />}
+                                {effectiveTab === 'visualize' && <LogicVizView repoName={globalSelectedRepo || primaryRepo} />}
+                            </div>
                                 )}
-                            </motion.div>
-                        </AnimatePresence>
-                    </div>
+                        </motion.div>
+                    </AnimatePresence>
                 </div>
-            </main>
         </div>
+            </main >
+        </div >
     );
 };
 

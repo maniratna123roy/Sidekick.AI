@@ -68,5 +68,18 @@ export const api = {
             throw new Error(error.details || error.error || 'Visualization failed');
         }
         return response.json();
+    },
+
+    deleteRepo: async (repoName: string) => {
+        const response = await fetch(`${API_URL}/delete`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ repoName }),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.details || error.error || 'Deletion failed');
+        }
+        return response.json();
     }
 };

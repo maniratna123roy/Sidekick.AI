@@ -185,4 +185,26 @@ router.post('/visualize', async (req, res) => {
   }
 });
 
+// DELETE /api/delete
+router.delete('/delete', async (req, res) => {
+  const { repoName } = req.body;
+  if (!repoName) return res.status(400).json({ error: "Repo name required" });
+
+  try {
+    const repoPath = path.join(REPO_STORAGE_PATH, repoName);
+
+    if (fs.existsSync(repoPath)) {
+      fs.rmSync(repoPath, { recursive: true, force: true });
+    }
+
+    // Also try to clean up Pinecone vectors if possible, but that requires more complex logic.
+    // For now, we just delete the files to save space as requested.
+
+    res.json({ message: `Repository ${repoName} deleted successfully` });
+  } catch (error) {
+    console.error('[Delete] Failed:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
