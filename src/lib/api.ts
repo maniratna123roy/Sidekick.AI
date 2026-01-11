@@ -16,10 +16,11 @@ export const api = {
 
     chat: async (query: string, repoName?: string) => {
         try {
+            const normalizedRepo = repoName?.toLowerCase();
             const response = await fetch(`${API_URL}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query, repoName }),
+                body: JSON.stringify({ query, repoName: normalizedRepo }),
             });
 
             if (!response.ok) {
@@ -39,7 +40,7 @@ export const api = {
     },
 
     getGraph: async (repoName: string) => {
-        const response = await fetch(`${API_URL}/graph?repoName=${repoName}`);
+        const response = await fetch(`${API_URL}/graph?repoName=${repoName.toLowerCase()}`);
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.details || error.error || 'Failed to fetch graph');
@@ -48,19 +49,19 @@ export const api = {
     },
 
     getFiles: async (repoName: string) => {
-        const response = await fetch(`${API_URL}/files?repoName=${repoName}`);
+        const response = await fetch(`${API_URL}/files?repoName=${repoName.toLowerCase()}`);
         if (!response.ok) throw new Error('Failed to fetch files');
         return response.json();
     },
 
     getFileContent: async (repoName: string, path: string) => {
-        const response = await fetch(`${API_URL}/file-content?repoName=${repoName}&path=${encodeURIComponent(path)}`);
+        const response = await fetch(`${API_URL}/file-content?repoName=${repoName.toLowerCase()}&path=${encodeURIComponent(path)}`);
         if (!response.ok) throw new Error('Failed to fetch file content');
         return response.json();
     },
 
     getAnalytics: async (repoName: string) => {
-        const response = await fetch(`${API_URL}/analytics?repoName=${repoName}`);
+        const response = await fetch(`${API_URL}/analytics?repoName=${repoName.toLowerCase()}`);
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.details || error.error || 'Failed to fetch analytics');
@@ -72,7 +73,7 @@ export const api = {
         const response = await fetch(`${API_URL}/visualize`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ repoName, filePath, type }),
+            body: JSON.stringify({ repoName: repoName.toLowerCase(), filePath, type }),
         });
         if (!response.ok) {
             const error = await response.json();
@@ -85,7 +86,7 @@ export const api = {
         const response = await fetch(`${API_URL}/delete`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ repoName }),
+            body: JSON.stringify({ repoName: repoName.toLowerCase() }),
         });
         if (!response.ok) {
             const error = await response.json();
