@@ -27,7 +27,8 @@ const DocumentationHubView = ({ indexedRepos, initialRepo }: { indexedRepos: str
                 );
                 setDoc(response.answer);
             } catch (err: any) {
-                setDoc("Failed to generate documentation.");
+                console.error("[DocsHub] Generation failed:", err);
+                setDoc(`Failed to generate documentation: ${err.message || "Unknown error"}`);
             } finally {
                 setLoading(false);
             }
@@ -78,6 +79,24 @@ const DocumentationHubView = ({ indexedRepos, initialRepo }: { indexedRepos: str
                     <div className="h-full flex flex-col items-center justify-center space-y-4">
                         <Loader2 className="w-8 h-8 text-primary animate-spin" />
                         <p className="text-xs font-mono uppercase tracking-widest animate-pulse">Analyzing Codebase for Documentation...</p>
+                    </div>
+                ) : doc?.startsWith('Failed to generate documentation') ? (
+                    <div className="h-full flex flex-col items-center justify-center space-y-6 text-center max-w-md mx-auto">
+                        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center">
+                            <HelpCircle className="w-8 h-8 text-red-500" />
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-lg font-bold text-white">Generation Failed</h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                {doc}
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-6 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-bold hover:bg-white/10 transition-all"
+                        >
+                            Retry Generation
+                        </button>
                     </div>
                 ) : (
                     <div className="prose prose-invert prose-sm max-w-4xl mx-auto animate-in fade-in slide-in-from-right-4 duration-500">

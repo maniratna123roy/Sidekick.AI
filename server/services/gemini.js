@@ -28,6 +28,7 @@ async function generateEmbedding(text) {
  */
 async function generateResponse(query, contextChunks) {
     try {
+        const isDocMode = query.includes('DOCUMENTATION MODE');
         const contextText = contextChunks.map(chunk => `
 File: ${chunk.metadata.filename}
 Lines: ${chunk.metadata.startLine}-${chunk.metadata.endLine}
@@ -39,16 +40,20 @@ ${chunk.metadata.content}
 
         const prompt = `
 You are an expert AI coding assistant named Sidekick. 
-Answer the user's question based ONLY on the provided code context.
+${isDocMode
+                ? "You are currently in DOCUMENTATION MODE. Goal: Generate comprehensive, high-level technical documentation."
+                : "Goal: Answer the user's question precisely based on the provided code context."}
 
 GUIDELINES:
 1. CITATIONS: Whenever you reference code, provide a markdown link like [filename:L123](https://github.com/REPO_PLACEHOLDER/blob/main/filename#L123).
 2. DIAGRAMS: If explaining a flow, architecture, or state change, ALWAYS include a Mermaid.js diagram using \`\`\`mermaid blocks.
-3. LANGUAGE: If the user asks in Hindi, Spanish, or English, respond in that language.
-4. If the answer is not in the context, say so.
+3. CONTEXT USAGE: ${isDocMode
+                ? "Use the provided context to build the documentation. If specific details are missing, provides a best-guess technical overview or explain what should be there based on standard patterns."
+                : "Answer ONLY based on the provided code context. If the answer is not in the context, say so."}
+4. LANGUAGE: Respond in the language used by the user.
 
 Context:
-${contextText}
+${contextChunks.length > 0 ? contextText : "NO SPECIFIC CODE CONTEXT FOUND FOR THIS REPOSITORY."}
 
 Question: ${query}
 `;

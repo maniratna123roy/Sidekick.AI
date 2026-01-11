@@ -81,7 +81,16 @@ router.post('/chat', async (req, res) => {
     const queryEmbedding = await generateEmbedding(query);
 
     // 2. Search Pinecone
-    const similarChunks = await searchSimilarChunks(queryEmbedding, repoName || undefined);
+    // Use higher topK for documentation to provide better context breadth
+    const isDocMode = query.includes('DOCUMENTATION MODE');
+    const topK = isDocMode ? 15 : 5;
+
+    console.log(`[Chat] TopK for prompt: ${topK}`);
+    const similarChunks = await searchSimilarChunks(queryEmbedding, repoName || undefined, topK);
+
+    if (similarChunks.length === 0 && repoName) {
+      console.warn(`[Chat] No context found for repo: ${repoName} with query: ${query}`);
+    }
 
     // 3. Generate Answer
     const answer = await generateResponse(query, similarChunks, repoName);
@@ -93,12 +102,16 @@ router.post('/chat', async (req, res) => {
         score: match.score,
         startLine: match.metadata.startLine,
         endLine: match.metadata.endLine,
-        code: match.metadata.content // Optional, might be large
+        code: match.metadata.content
       }))
     });
   } catch (error) {
     console.error('[Chat] Failed:', error);
-    res.status(500).json({ error: 'Chat processing failed', details: error.message });
+    res.status(500).json({
+      error: 'Chat processing failed',
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
