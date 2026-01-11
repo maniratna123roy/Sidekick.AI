@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { FileText, Book, Code, Shield, HelpCircle, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import { useCallback } from 'react';
 
 const DocumentationHubView = ({ indexedRepos, initialRepo }: { indexedRepos: string[], initialRepo: string | null }) => {
     const [doc, setDoc] = useState<string | null>(null);
@@ -16,27 +18,29 @@ const DocumentationHubView = ({ indexedRepos, initialRepo }: { indexedRepos: str
         { id: 'security', label: 'Security & Auth', icon: Shield },
     ];
 
+    const fetchDoc = useCallback(async () => {
+        const repo = localRepo || (indexedRepos.length > 0 ? indexedRepos[indexedRepos.length - 1] : null);
+        if (!repo) return;
+
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await api.chat(
+                `SYSTEM: DOCUMENTATION MODE. GENERATE A COMPREHENSIVE ${activeSection.toUpperCase()} GUIDE FOR THIS REPOSITORY. USE MARKDOWN.`,
+                repo
+            );
+            setDoc(response.answer);
+        } catch (err: any) {
+            console.error("[DocsHub] Generation failed:", err);
+            setError(err.message || "Unknown error");
+        } finally {
+            setLoading(false);
+        }
+    }, [localRepo, indexedRepos, activeSection]);
+
     useEffect(() => {
-        const fetchDoc = async () => {
-            const repo = localRepo || (indexedRepos.length > 0 ? indexedRepos[indexedRepos.length - 1] : null);
-            if (!repo) return;
-            setLoading(true);
-            setError(null);
-            try {
-                const response = await api.chat(
-                    `SYSTEM: DOCUMENTATION MODE. GENERATE A COMPREHENSIVE ${activeSection.toUpperCase()} GUIDE FOR THIS REPOSITORY. USE MARKDOWN.`,
-                    repo
-                );
-                setDoc(response.answer);
-            } catch (err: any) {
-                console.error("[DocsHub] Generation failed:", err);
-                setError(err.message || "Unknown error");
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchDoc();
-    }, [activeSection, localRepo, indexedRepos]);
+    }, [fetchDoc]);
 
     return (
         <div className="h-full flex flex-col md:flex-row">

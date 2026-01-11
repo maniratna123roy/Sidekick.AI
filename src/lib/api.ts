@@ -15,16 +15,27 @@ export const api = {
     },
 
     chat: async (query: string, repoName?: string) => {
-        const response = await fetch(`${API_URL}/chat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query, repoName }),
-        });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.details || error.error || 'Chat failed');
+        try {
+            const response = await fetch(`${API_URL}/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query, repoName }),
+            });
+
+            if (!response.ok) {
+                let errorData;
+                try {
+                    errorData = await response.json();
+                } catch (e) {
+                    throw new Error(`Server returned status ${response.status} (Not JSON)`);
+                }
+                throw new Error(errorData.details || errorData.error || `Server Error ${response.status}`);
+            }
+            return response.json();
+        } catch (err: any) {
+            console.error(`[API] Chat failed at ${API_URL}/chat:`, err);
+            throw err;
         }
-        return response.json();
     },
 
     getGraph: async (repoName: string) => {
