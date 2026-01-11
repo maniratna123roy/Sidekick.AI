@@ -1,78 +1,180 @@
-# Welcome to your Lovable project
+🚀 Sidekick AI — Codebase Visualization & Semantic Navigator
 
-## Project info
+Sidekick AI is a visualization-first AI tool that helps developers quickly understand complex or legacy codebases.
+Just paste a GitHub clone link, and Sidekick automatically:
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+ingests the repository
 
-## Deployment
+indexes the code with vector embeddings
 
-**Frontend (Vercel)**: https://sidekick-ai-three.vercel.app/
-**Backend (Render)**: https://sidekick-ai-zavi.onrender.com
+performs RAG reasoning
 
-## How can I edit this code?
+generates Mermaid & Sequence diagrams
 
-There are several ways of editing your application.
+builds interactive dependency graphs
 
-**Use Lovable**
+No manual setup — the codebase draws itself.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+🔗 Live Deployment
 
-Changes made via Lovable will be committed automatically to this repo.
+Frontend (Vercel)
+https://sidekick-ai-three.vercel.app/
 
-**Use your preferred IDE**
+Backend (Render)
+https://sidekick-ai-zavi.onrender.com
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+🧩 What does Sidekick AI do?
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Sidekick AI helps you:
 
-Follow these steps:
+visualize architecture and data flow
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+explore dependencies and call graphs
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+understand large repositories faster
 
-# Step 3: Install the necessary dependencies.
-npm i
+identify complexity hotspots
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+generate auto documentation
+
+perform semantic search over the codebase
+
+MVP = visualization
+
+✨ Key Features
+
+paste GitHub repo link → auto indexing
+
+RAG-powered semantic navigation
+
+Pinecone vector database embeddings
+
+Mermaid architecture diagrams
+
+Sequence diagrams for execution flows
+
+interactive knowledge graphs
+
+AST-based static code analysis
+
+supports large multi-file repos
+
+🧠 How it works (simple flow)
+
+1️⃣ Paste GitHub clone link
+2️⃣ System clones & parses repo
+3️⃣ Embeddings generated and stored
+4️⃣ RAG retrieves contextual code
+5️⃣ AI builds visual diagrams
+
+🛠️ Tech Stack
+
+Frontend
+
+React 18
+
+TypeScript
+
+Vite
+
+Tailwind CSS
+
+shadcn-ui
+
+Backend
+
+Node.js + Express
+
+simple-git
+
+AI & Data Layer
+
+Google Gemini API
+
+Pinecone Vector Database
+
+Supabase (PostgreSQL)
+
+Visualization
+
+Mermaid diagrams
+
+Sequence diagrams
+
+D3 / Recharts
+
+🏗️ Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         USER INTERFACE                          │
+│                    (Browser - localhost:5173)                   │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             │ HTTP/REST API
+                             │
+┌────────────────────────────▼────────────────────────────────────┐
+│                         FRONTEND                                │
+│                   React + Vite + TypeScript                     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│  │  Landing     │  │    Chat      │  │  API Service │         │
+│  │  Page        │  │  Interface   │  │              │         │
+│  └──────────────┘  └──────────────┘  └──────────────┘         │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             │ REST API Calls
+                             │
+┌────────────────────────────▼────────────────────────────────────┐
+│                         BACKEND                                 │
+│                   Node.js + Express (Port 3001)                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│  │   Index      │  │     Chat     │  │   Health     │         │
+│  │   Route      │  │    Route     │  │   Check      │         │
+│  └──────┬───────┘  └──────┬───────┘  └──────────────┘         │
+│         │                  │                                     │
+│  ┌──────▼──────────────────▼─────────────────────────┐         │
+│  │              SERVICE LAYER                         │         │
+│  │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │         │
+│  │  │ Repository  │ │   Gemini    │ │   Vector    │ │         │
+│  │  │  Service    │ │  Service    │ │  Service    │ │         │
+│  │  └─────────────┘ └─────────────┘ └─────────────┘ │         │
+│  └────────────────────────────────────────────────────┘         │
+└──────┬────────────────┬────────────────┬─────────────────────────┘
+       │                │                │
+       │                │                │
+   ┌───▼───┐      ┌────▼─────┐    ┌────▼─────┐
+   │GitHub │      │  Gemini  │    │ Pinecone │
+   │  API  │      │   API    │    │ Vector   │
+   │       │      │          │    │   DB     │
+   └───────┘      └──────────┘    └──────────┘
 ```
 
-**Edit a file directly in GitHub**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+🖥️ Local Development
 
-**Use GitHub Codespaces**
+Requirements: Node.js & npm
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+git clone <YOUR_GIT_URL>
+cd sidekick-ai
+npm i
+npm run dev
 
-## What technologies are used for this project?
+🌍 Deployment
 
-This project is built with:
+Hosted using:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Vercel – frontend
 
-## How can I deploy this project?
+Render – backend
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+🚧 Future Enhancements
 
-## Can I connect a custom domain to my Lovable project?
+VS Code extension
 
-Yes, you can!
+multi-repo architecture mapping
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+PR impact analyzer
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+refactor suggestions using AI
+
+real-time collaborative visualization
