@@ -29,10 +29,17 @@ async function storeVectors(vectors) {
  */
 async function searchSimilarChunks(vector, repoName, topK = 5) {
     const index = pinecone.index(indexName);
+
+    // Pinecone filters are case-sensitive. 
+    // We check both the provided name and its lowercase version to catch all variations.
+    const filter = repoName
+        ? { repoName: { $in: [repoName, repoName.toLowerCase()] } }
+        : undefined;
+
     const queryResponse = await index.query({
         vector: vector,
         topK: topK,
-        filter: { repoName: { $eq: repoName } },
+        filter: filter,
         includeMetadata: true,
     });
     return queryResponse.matches;

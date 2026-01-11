@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 const DocumentationHubView = ({ indexedRepos, initialRepo }: { indexedRepos: string[], initialRepo: string | null }) => {
     const [doc, setDoc] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [activeSection, setActiveSection] = useState('architecture');
     const [localRepo, setLocalRepo] = useState<string | null>(initialRepo);
 
@@ -20,6 +21,7 @@ const DocumentationHubView = ({ indexedRepos, initialRepo }: { indexedRepos: str
             const repo = localRepo || (indexedRepos.length > 0 ? indexedRepos[indexedRepos.length - 1] : null);
             if (!repo) return;
             setLoading(true);
+            setError(null);
             try {
                 const response = await api.chat(
                     `SYSTEM: DOCUMENTATION MODE. GENERATE A COMPREHENSIVE ${activeSection.toUpperCase()} GUIDE FOR THIS REPOSITORY. USE MARKDOWN.`,
@@ -28,7 +30,7 @@ const DocumentationHubView = ({ indexedRepos, initialRepo }: { indexedRepos: str
                 setDoc(response.answer);
             } catch (err: any) {
                 console.error("[DocsHub] Generation failed:", err);
-                setDoc(`Failed to generate documentation: ${err.message || "Unknown error"}`);
+                setError(err.message || "Unknown error");
             } finally {
                 setLoading(false);
             }
@@ -79,8 +81,9 @@ const DocumentationHubView = ({ indexedRepos, initialRepo }: { indexedRepos: str
                     <div className="h-full flex flex-col items-center justify-center space-y-4">
                         <Loader2 className="w-8 h-8 text-primary animate-spin" />
                         <p className="text-xs font-mono uppercase tracking-widest animate-pulse">Analyzing Codebase for Documentation...</p>
+                        <p className="text-[10px] text-muted-foreground mt-2 italic">This may take up to 30 seconds for complex repos.</p>
                     </div>
-                ) : doc?.startsWith('Failed to generate documentation') ? (
+                ) : error ? (
                     <div className="h-full flex flex-col items-center justify-center space-y-6 text-center max-w-md mx-auto">
                         <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center">
                             <HelpCircle className="w-8 h-8 text-red-500" />
@@ -88,20 +91,23 @@ const DocumentationHubView = ({ indexedRepos, initialRepo }: { indexedRepos: str
                         <div className="space-y-2">
                             <h3 className="text-lg font-bold text-white">Generation Failed</h3>
                             <p className="text-sm text-muted-foreground leading-relaxed">
-                                {doc}
+                                {error.includes('504') || error.includes('timeout')
+                                    ? " The AI took too long to analyze this section and the connection timed out. Please try a smaller section or refresh."
+                                    : `Failed to generate documentation: ${error}`}
                             </p>
                         </div>
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="px-6 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-bold hover:bg-white/10 transition-all"
+                        <Button
+                            onClick={fetchDoc}
+                            variant="retro-3d"
+                            className="bg-red-500 hover:bg-red-600 h-10 px-8"
                         >
                             Retry Generation
-                        </button>
+                        </Button>
                     </div>
                 ) : (
                     <div className="prose prose-invert prose-sm max-w-4xl mx-auto animate-in fade-in slide-in-from-right-4 duration-500">
                         <div className="whitespace-pre-wrap leading-relaxed text-slate-300 font-sans">
-                            {doc}
+                            {doc || 'Select a repository and section to begin generation.'}
                         </div>
                     </div>
                 )}

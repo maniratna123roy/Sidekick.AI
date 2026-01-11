@@ -81,15 +81,17 @@ router.post('/chat', async (req, res) => {
     const queryEmbedding = await generateEmbedding(query);
 
     // 2. Search Pinecone
-    // Use higher topK for documentation to provide better context breadth
+    // Use slightly higher topK for documentation but keep it manageable for speed (avoid Vercel timeouts)
     const isDocMode = query.includes('DOCUMENTATION MODE');
-    const topK = isDocMode ? 15 : 5;
+    const topK = isDocMode ? 10 : 5;
 
     console.log(`[Chat] TopK for prompt: ${topK}`);
     const similarChunks = await searchSimilarChunks(queryEmbedding, repoName || undefined, topK);
 
+    console.log(`[Chat] Found ${similarChunks.length} chunks for ${repoName}`);
+
     if (similarChunks.length === 0 && repoName) {
-      console.warn(`[Chat] No context found for repo: ${repoName} with query: ${query}`);
+      console.warn(`[Chat] No context found for repo: ${repoName}. This will result in a generic response.`);
     }
 
     // 3. Generate Answer
