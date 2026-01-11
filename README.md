@@ -1,4 +1,4 @@
-<h2>🚀 **Sidekick AI — Codebase Visualization & Semantic Navigator**</h2>
+<h2>🚀 Sidekick AI — Codebase Visualization & Semantic Navigator</h2>
 
 **Sidekick AI** is a visualization-first AI tool that helps developers quickly understand complex or legacy codebases.
 
