@@ -6,14 +6,36 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
 
 /**
+ * Helper to retry API calls with exponential backoff
+ */
+async function withRetry(fn, retries = 3, delay = 2000) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (error) {
+            const isRateLimit = error.message?.includes('429') || error.status === 429;
+            if (isRateLimit && i < retries - 1) {
+                console.warn(`[Gemini] Rate limit hit. Retrying in ${delay}ms... (Attempt ${i + 1}/${retries})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2; // Exponential backoff
+                continue;
+            }
+            throw error;
+        }
+    }
+}
+
+/**
  * Generate embedding for a given text
  * @param {string} text - The text to embed
  * @returns {Promise<number[]>} - The embedding vector
  */
 async function generateEmbedding(text) {
     try {
-        const result = await embeddingModel.embedContent(text);
-        return result.embedding.values;
+        return await withRetry(async () => {
+            const result = await embeddingModel.embedContent(text);
+            return result.embedding.values;
+        });
     } catch (error) {
         console.error("Error generating embedding:", error);
         throw error;
@@ -58,7 +80,9 @@ ${contextChunks.length > 0 ? contextText : "NO SPECIFIC CODE CONTEXT FOUND FOR T
 Question: ${query}
 `;
 
-        const result = await model.generateContent(prompt);
+        const result = await withRetry(async () => {
+            return await model.generateContent(prompt);
+        });
         return result.response.text();
     } catch (error) {
         console.error("Error generating response:", error);
@@ -167,7 +191,9 @@ async function generateMermaidDiagram(codeContent, type = 'flowchart') {
         ${codeContent}
         `;
 
-        const result = await model.generateContent(prompt);
+        const result = await withRetry(async () => {
+            return await model.generateContent(prompt);
+        });
         let text = result.response.text();
         console.log(`[Gemini] Raw Mermaid Output (${text.length} chars):\n${text}`);
 
