@@ -1,6 +1,7 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+console.log(`[Gemini] Initialized with key starting with: ${process.env.GEMINI_API_KEY?.substring(0, 6)}...`);
 
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
