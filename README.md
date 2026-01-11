@@ -1,6 +1,6 @@
-🚀 *Sidekick AI — Codebase Visualization & Semantic Navigator*
+🚀 **Sidekick AI — Codebase Visualization & Semantic Navigator**
 
-Sidekick AI is a visualization-first AI tool that helps developers quickly understand complex or legacy codebases.
+**Sidekick AI** is a visualization-first AI tool that helps developers quickly understand complex or legacy codebases.
 
 Just paste a GitHub clone link, and Sidekick automatically:
 ingests the repository
@@ -10,14 +10,14 @@ generates Mermaid & Sequence diagrams
 builds interactive dependency graphs
 No manual setup — the codebase draws itself.
 
-🔗 Live Deployment:-
+**🔗 Live Deployment:-**
 Frontend (Vercel)
 https://sidekick-ai-three.vercel.app/
 
 Backend (Render)
 https://sidekick-ai-zavi.onrender.com
 
-🧩 What does Sidekick AI do?
+**🧩 What does Sidekick AI do?**
 
 Sidekick AI helps you:
 visualize architecture and data flow
@@ -28,7 +28,7 @@ generate auto documentation
 perform semantic search over the codebase
 MVP = visualization
 
-✨ Key Features:-
+**✨ Key Features:-**
 paste GitHub repo link → auto indexing
 RAG-powered semantic navigation
 Pinecone vector database embeddings
@@ -38,7 +38,7 @@ interactive knowledge graphs
 AST-based static code analysis
 supports large multi-file repos
 
-🧠 How it works (simple flow)
+**🧠 How it works (simple flow)**
 
 1️⃣ Paste GitHub clone link
 2️⃣ System clones & parses repo
@@ -46,7 +46,7 @@ supports large multi-file repos
 4️⃣ RAG retrieves contextual code
 5️⃣ AI builds visual diagrams
 
-🛠️ Tech Stack
+**🛠️ Tech Stack**
 
 Frontend:-
 React 18
@@ -65,7 +65,7 @@ Supabase (PostgreSQL)
 Visualization
 
 
-🏗️ Architecture Overview
+**🏗️ Architecture Overview**
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -112,7 +112,7 @@ Visualization
 ```
 
 
-🖥️ Local Development
+**🖥️ Local Development**
 
 Requirements: Node.js & npm
 git clone <YOUR_GIT_URL>
@@ -120,13 +120,13 @@ cd sidekick-ai
 npm i
 npm run dev
 
-🌍 Deployment
+**🌍 Deployment**
 
 Hosted using:
 Vercel – frontend
 Render – backend
 
-🚧 Future Enhancements
+**🚧 Future Enhancements**
 
 VS Code extension
 multi-repo architecture mapping
