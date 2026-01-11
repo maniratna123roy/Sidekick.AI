@@ -71,7 +71,8 @@ router.post('/index', async (req, res) => {
 
 // Chat / Query
 router.post('/chat', async (req, res) => {
-  const { query, repoName } = req.body;
+  let { query, repoName } = req.body;
+  if (repoName) repoName = repoName.toLowerCase();
   if (!query) return res.status(400).json({ error: 'Query is required' });
 
   console.log(`[Chat] Query: ${query}, Repo: ${repoName || 'All'}`);
@@ -119,8 +120,9 @@ router.post('/chat', async (req, res) => {
 
 // GET /api/files?repoName=name
 router.get('/files', async (req, res) => {
-  const { repoName } = req.query;
+  let { repoName } = req.query;
   if (!repoName) return res.status(400).json({ error: "Repo name required" });
+  repoName = repoName.toLowerCase();
 
   try {
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
@@ -133,8 +135,9 @@ router.get('/files', async (req, res) => {
 
 // GET /api/file-content?repoName=name&path=relative/path
 router.get('/file-content', async (req, res) => {
-  const { repoName, path: filePath } = req.query;
+  let { repoName, path: filePath } = req.query;
   if (!repoName || !filePath) return res.status(400).json({ error: "Repo name and path required" });
+  repoName = repoName.toLowerCase();
 
   try {
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
@@ -147,8 +150,9 @@ router.get('/file-content', async (req, res) => {
 
 // GET /api/graph?repoName=name
 router.get('/graph', async (req, res) => {
-  const { repoName } = req.query;
+  let { repoName } = req.query;
   if (!repoName) return res.status(400).json({ error: "Repo name required" });
+  repoName = repoName.toLowerCase();
 
   try {
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
@@ -162,8 +166,9 @@ router.get('/graph', async (req, res) => {
 
 // GET /api/analytics?repoName=name
 router.get('/analytics', async (req, res) => {
-  const { repoName } = req.query;
+  let { repoName } = req.query;
   if (!repoName) return res.status(400).json({ error: "Repo name required" });
+  repoName = repoName.toLowerCase();
 
   try {
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
@@ -183,8 +188,9 @@ router.get('/analytics', async (req, res) => {
 
 // POST /api/visualize
 router.post('/visualize', async (req, res) => {
-  const { repoName, filePath, type } = req.body;
+  let { repoName, filePath, type } = req.body;
   if (!repoName || !filePath) return res.status(400).json({ error: "Repo name and file path required" });
+  repoName = repoName.toLowerCase();
 
   try {
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
@@ -202,8 +208,9 @@ router.post('/visualize', async (req, res) => {
 
 // DELETE /api/delete
 router.delete('/delete', async (req, res) => {
-  const { repoName } = req.body;
+  let { repoName } = req.body;
   if (!repoName) return res.status(400).json({ error: "Repo name required" });
+  repoName = repoName.toLowerCase();
 
   try {
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
