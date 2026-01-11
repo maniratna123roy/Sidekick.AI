@@ -45,7 +45,27 @@ async function searchSimilarChunks(vector, repoName, topK = 5) {
     return queryResponse.matches;
 }
 
+/**
+ * Delete all vectors associated with a repository
+ * @param {string} repoName 
+ */
+async function deleteVectorsByRepo(repoName) {
+    const index = pinecone.index(indexName);
+    try {
+        console.log(`[Pinecone] Purging vectors for repo: ${repoName}`);
+        // Delete by metadata filter
+        await index.deleteMany({
+            filter: { repoName: { $in: [repoName, repoName.toLowerCase()] } }
+        });
+        console.log(`[Pinecone] Purge complete for: ${repoName}`);
+    } catch (error) {
+        console.error(`[Pinecone] Purge failed for ${repoName}:`, error);
+        // We don't throw here to avoid blocking the file deletion if Pinecone fails
+    }
+}
+
 module.exports = {
     storeVectors,
-    searchSimilarChunks
+    searchSimilarChunks,
+    deleteVectorsByRepo
 };

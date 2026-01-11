@@ -162,14 +162,21 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
             // 1. Delete from Server
             await api.deleteRepo(repoName);
 
-            // 2. Delete from Supabase
-            const { error } = await (supabase as any)
-                .from('indexed_repositories')
-                .delete()
-                .eq('user_id', user.id)
-                .eq('repo_name', repoName);
+            // 2. Delete from Supabase (Case-Insensitive)
+            // We use .ilike or simply delete all variations we know about. 
+            // The cleanest way in Supabase for case-insensitive matching is often ilike or multiple eqs.
+            // But since we have the full list in state, we can just filter matching ones.
+            const variationsToDelete = indexedRepos.filter(r => r.name.toLowerCase() === repoName.toLowerCase());
 
-            if (error) throw error;
+            for (const variant of variationsToDelete) {
+                const { error } = await (supabase as any)
+                    .from('indexed_repositories')
+                    .delete()
+                    .eq('user_id', user.id)
+                    .eq('repo_name', variant.name);
+
+                if (error) console.error(`[Delete] Failed for variant ${variant.name}:`, error);
+            }
 
             // 3. Update State
             setIndexedRepos(prev => prev.filter(r => r.name.toLowerCase() !== repoName.toLowerCase()));

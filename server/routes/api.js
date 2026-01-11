@@ -5,7 +5,7 @@ const path = require('path');
 
 const { cloneRepository, getCodeFiles, chunkCode, getDependencyGraph, getRepoFiles, getFileContent } = require('../services/repo');
 const { generateEmbedding, generateResponse, generateMermaidDiagram } = require('../services/gemini');
-const { storeVectors, searchSimilarChunks } = require('../services/pinecone');
+const { storeVectors, searchSimilarChunks, deleteVectorsByRepo } = require('../services/pinecone');
 const { getRepositoryAnalytics } = require('../services/analytics');
 
 const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH
@@ -212,8 +212,8 @@ router.delete('/delete', async (req, res) => {
       fs.rmSync(repoPath, { recursive: true, force: true });
     }
 
-    // Also try to clean up Pinecone vectors if possible, but that requires more complex logic.
-    // For now, we just delete the files to save space as requested.
+    // 2. Clean up Pinecone vectors
+    await deleteVectorsByRepo(repoName);
 
     res.json({ message: `Repository ${repoName} deleted successfully` });
   } catch (error) {
