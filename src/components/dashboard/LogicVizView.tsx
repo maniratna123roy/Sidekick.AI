@@ -243,52 +243,51 @@ const LogicVizView = ({ repoName }: { repoName: string }) => {
                             <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
                                 Select a file from your repository and choose a diagram type to see the AI auto-generate a structural map.
                             </p>
-                        </p>
                         </motion.div>
-                ) : renderError?.type === 'import' ? (
-                <motion.div
-                    key="import-error"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="h-full flex flex-col items-center justify-center text-center p-12"
-                >
-                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
-                        <Activity className="w-8 h-8 text-red-500" />
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-2">Update Required</h3>
-                    <p className="text-sm text-muted-foreground max-w-xs leading-relaxed mb-6">
-                        The application has been updated and your browser is holding onto old logic. Please refresh to load the latest visualizer.
-                    </p>
-                    <Button onClick={() => window.location.reload()} variant="default" className="bg-red-500 hover:bg-red-600">
-                        Refresh Page
-                    </Button>
-                </motion.div>
-                ) : (
-                <motion.div
-                    key={`viz-${diagram.substring(0, 50)}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="h-full flex flex-col"
-                >
-                    <div className="flex items-center justify-between mb-4">
-                        <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest border border-white/10 px-2 py-1 rounded">
-                            Generated: {selectedFile}
-                        </span>
-                        <Button size="sm" variant="retro-3d" onClick={downloadSVG} className="h-8 text-xs gap-2">
-                            <Download className="w-3.5 h-3.5" />
-                            Export SVG
-                        </Button>
-                    </div>
-                    <div className="flex-1 glass-panel rounded-2xl bg-white/5 border-white/5 p-8 overflow-auto flex items-center justify-center">
-                        <div
-                            ref={mermaidRef}
-                            className="w-full flex items-center justify-center min-h-[400px]"
-                        />
-                    </div>
-                </motion.div>
+                    ) : renderError?.type === 'import' ? (
+                        <motion.div
+                            key="import-error"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="h-full flex flex-col items-center justify-center text-center p-12"
+                        >
+                            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
+                                <Activity className="w-8 h-8 text-red-500" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2">Update Required</h3>
+                            <p className="text-sm text-muted-foreground max-w-xs leading-relaxed mb-6">
+                                The application has been updated and your browser is holding onto old logic. Please refresh to load the latest visualizer.
+                            </p>
+                            <Button onClick={() => window.location.reload()} variant="default" className="bg-red-500 hover:bg-red-600">
+                                Refresh Page
+                            </Button>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key={`viz-${diagram.substring(0, 50)}`}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="h-full flex flex-col"
+                        >
+                            <div className="flex items-center justify-between mb-4">
+                                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest border border-white/10 px-2 py-1 rounded">
+                                    Generated: {selectedFile}
+                                </span>
+                                <Button size="sm" variant="retro-3d" onClick={downloadSVG} className="h-8 text-xs gap-2">
+                                    <Download className="w-3.5 h-3.5" />
+                                    Export SVG
+                                </Button>
+                            </div>
+                            <div className="flex-1 glass-panel rounded-2xl bg-white/5 border-white/5 p-8 overflow-auto flex items-center justify-center">
+                                <div
+                                    ref={mermaidRef}
+                                    className="w-full flex items-center justify-center min-h-[400px]"
+                                />
+                            </div>
+                        </motion.div>
                     )}
-            </AnimatePresence>
-        </div>
+                </AnimatePresence>
+            </div>
         </div >
     );
 };
