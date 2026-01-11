@@ -19,7 +19,7 @@ if (!fs.existsSync(REPO_STORAGE_PATH)) {
  */
 async function cloneRepository(repoUrl) {
     // Extract repo name from URL (e.g., https://github.com/user/repo.git -> user_repo)
-    const repoName = repoUrl.split('/').slice(-2).join('_').replace('.git', '');
+    const repoName = repoUrl.split('/').slice(-2).join('_').replace('.git', '').toLowerCase();
     const localPath = path.join(REPO_STORAGE_PATH, repoName);
 
     if (fs.existsSync(localPath)) {

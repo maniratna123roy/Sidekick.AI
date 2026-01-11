@@ -60,7 +60,19 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                 .eq('user_id', session.user.id);
 
             if (repos && !error) {
-                const mappedRepos = repos.map((r: any) => ({ name: r.repo_name, url: r.repo_url, is_active: r.is_active }));
+                // Deduplicate repos by name (case-insensitive)
+                const uniqueReposMap = new Map();
+                repos.forEach((r: any) => {
+                    const normalizedName = r.repo_name.toLowerCase();
+                    if (!uniqueReposMap.has(normalizedName)) {
+                        uniqueReposMap.set(normalizedName, {
+                            name: r.repo_name,
+                            url: r.repo_url,
+                            is_active: r.is_active
+                        });
+                    }
+                });
+                const mappedRepos = Array.from(uniqueReposMap.values());
                 setIndexedRepos(mappedRepos);
 
                 // Set initial global selection to last active repo
@@ -123,7 +135,13 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                 title: "Indexing Complete",
                 description: `Successfully indexed ${result.repo}.`,
             });
-            setIndexedRepos(prev => [...prev, { name: result.repo, url: repoUrl, is_active: true }]);
+
+            const newRepo = { name: result.repo, url: repoUrl, is_active: true };
+            setIndexedRepos(prev => {
+                const normalizedNew = newRepo.name.toLowerCase();
+                const filtered = prev.filter(r => r.name.toLowerCase() !== normalizedNew);
+                return [...filtered, newRepo];
+            });
             setGlobalSelectedRepo(result.repo);
             setRepoUrl('');
         } catch (error: any) {
@@ -154,8 +172,8 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
             if (error) throw error;
 
             // 3. Update State
-            setIndexedRepos(prev => prev.filter(r => r.name !== repoName));
-            if (globalSelectedRepo === repoName) {
+            setIndexedRepos(prev => prev.filter(r => r.name.toLowerCase() !== repoName.toLowerCase()));
+            if (globalSelectedRepo?.toLowerCase() === repoName.toLowerCase()) {
                 setGlobalSelectedRepo(null);
             }
 
@@ -199,8 +217,8 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
         }
     };
 
-    const activeRepos = indexedRepos.filter(r => r.is_active).map(r => r.name);
-    const primaryRepo = activeRepos[activeRepos.length - 1];
+    const activeRepos = Array.from(new Set(indexedRepos.filter(r => r.is_active).map(r => r.name)));
+    const primaryRepo = activeRepos.length > 0 ? activeRepos[activeRepos.length - 1] : null;
 
     // Determine what to show in main content area
     const currentPath = location.pathname;
