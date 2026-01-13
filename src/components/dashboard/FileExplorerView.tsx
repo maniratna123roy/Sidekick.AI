@@ -4,7 +4,7 @@ import { api } from '@/lib/api';
 import MarkdownRenderer from './MarkdownRenderer';
 import { cn } from '@/lib/utils';
 
-const FileExplorerView = ({ repoName, allRepos = [] }: { repoName: string, allRepos?: string[] }) => {
+const FileExplorerView = ({ repoName, allRepos = [], repoId }: { repoName: string, allRepos?: string[], repoId?: string }) => {
     const [files, setFiles] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -21,7 +21,7 @@ const FileExplorerView = ({ repoName, allRepos = [] }: { repoName: string, allRe
             if (!localRepo) return;
             setLoading(true);
             try {
-                const response = await api.getFiles(localRepo);
+                const response = await api.getFiles(localRepo, repoId);
                 setFiles(response.files.sort());
             } catch (err) {
                 console.error(err);
@@ -37,7 +37,7 @@ const FileExplorerView = ({ repoName, allRepos = [] }: { repoName: string, allRe
         setIsReadingVisible(true);
         setFileContent(null);
         try {
-            const response = await api.getFileContent(repoName, path);
+            const response = await api.getFileContent(localRepo, path, repoId);
             setFileContent(response.content);
         } catch (err) {
             setFileContent("Error loading file content.");

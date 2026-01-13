@@ -41,7 +41,7 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
     // Indexing State
     const [repoUrl, setRepoUrl] = useState('');
     const [isIndexing, setIsIndexing] = useState(false);
-    const [indexedRepos, setIndexedRepos] = useState<{ name: string, url: string, is_active: boolean }[]>([]);
+    const [indexedRepos, setIndexedRepos] = useState<{ id: string, name: string, url: string, is_active: boolean }[]>([]);
     const [globalSelectedRepo, setGlobalSelectedRepo] = useState<string | null>(null);
 
     useEffect(() => {
@@ -56,7 +56,7 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
             // Fetch indexed repos for this user
             const { data: repos, error } = await (supabase as any)
                 .from('indexed_repositories')
-                .select('repo_name, repo_url, is_active')
+                .select('id, repo_name, repo_url, is_active')
                 .eq('user_id', session.user.id);
 
             if (repos && !error) {
@@ -66,6 +66,7 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                     const normalizedName = r.repo_name.toLowerCase();
                     if (!uniqueReposMap.has(normalizedName)) {
                         uniqueReposMap.set(normalizedName, {
+                            id: r.id,
                             name: r.repo_name,
                             url: r.repo_url,
                             is_active: r.is_active
@@ -118,25 +119,27 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
 
         setIsIndexing(true);
         try {
-            const result = await api.indexRepo(repoUrl);
+            const result = await api.indexRepo(repoUrl, user.id);
 
-            // Save to Supabase
-            const { error: dbError } = await (supabase as any)
+            // Save to Supabase (if not already there or to update)
+            const { data: savedData, error: dbError } = await (supabase as any)
                 .from('indexed_repositories')
-                .insert([{
+                .upsert([{
                     user_id: user.id,
                     repo_url: repoUrl,
                     repo_name: result.repo
-                }]);
+                }], { onConflict: 'user_id,repo_name' })
+                .select();
 
             if (dbError) throw dbError;
+            const repoId = savedData?.[0]?.id || result.repoId;
 
             toast({
                 title: "Indexing Complete",
                 description: `Successfully indexed ${result.repo}.`,
             });
 
-            const newRepo = { name: result.repo, url: repoUrl, is_active: true };
+            const newRepo = { id: repoId, name: result.repo, url: repoUrl, is_active: true };
             setIndexedRepos(prev => {
                 const normalizedNew = newRepo.name.toLowerCase();
                 const filtered = prev.filter(r => r.name.toLowerCase() !== normalizedNew);
@@ -226,6 +229,9 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
 
     const activeRepos = Array.from(new Set(indexedRepos.filter(r => r.is_active).map(r => r.name)));
     const primaryRepo = activeRepos.length > 0 ? activeRepos[activeRepos.length - 1] : null;
+
+    const selectedRepoData = indexedRepos.find(r => r.name === (globalSelectedRepo || primaryRepo));
+    const globalSelectedRepoId = selectedRepoData?.id;
 
     // Determine what to show in main content area
     const currentPath = location.pathname;
@@ -422,16 +428,17 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                                 ) : (
                                     <div className="glass-panel rounded-2xl border-white/5 bg-white/5 min-h-[calc(100vh-12rem)] relative overflow-hidden flex flex-col">
                                         {/* Subview Rendering */}
-                                        {effectiveTab === 'chat' && <ChatView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} />}
-                                        {effectiveTab === 'map' && <KnowledgeGraph repoName={globalSelectedRepo || primaryRepo} allRepos={activeRepos} />}
-                                        {effectiveTab === 'explorer' && <FileExplorerView repoName={globalSelectedRepo || primaryRepo} allRepos={activeRepos} />}
-                                        {effectiveTab === 'error' && <ErrorExplainerView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} />}
-                                        {effectiveTab === 'docs' && <DocumentationHubView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} />}
+                                        {effectiveTab === 'chat' && <ChatView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} repoId={globalSelectedRepoId} />}
+                                        {effectiveTab === 'map' && <KnowledgeGraph repoName={globalSelectedRepo || primaryRepo} allRepos={activeRepos} repoId={globalSelectedRepoId} />}
+                                        {effectiveTab === 'explorer' && <FileExplorerView repoName={globalSelectedRepo || primaryRepo} allRepos={activeRepos} repoId={globalSelectedRepoId} />}
+                                        {effectiveTab === 'error' && <ErrorExplainerView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} repoId={globalSelectedRepoId} />}
+                                        {effectiveTab === 'docs' && <DocumentationHubView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} repoId={globalSelectedRepoId} />}
                                         {effectiveTab === 'analytics' && <RepoAnalyticsView
                                             repoName={globalSelectedRepo || primaryRepo}
-                                            repoUrl={indexedRepos.find(r => r.name === (globalSelectedRepo || primaryRepo))?.url}
+                                            repoUrl={selectedRepoData?.url}
+                                            repoId={globalSelectedRepoId}
                                         />}
-                                        {effectiveTab === 'visualize' && <LogicVizView repoName={globalSelectedRepo || primaryRepo} />}
+                                        {effectiveTab === 'visualize' && <LogicVizView repoName={globalSelectedRepo || primaryRepo} repoId={globalSelectedRepoId} />}
                                     </div>
                                 )}
                             </motion.div>

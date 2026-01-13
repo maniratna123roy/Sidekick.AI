@@ -1,11 +1,11 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export const api = {
-    indexRepo: async (url: string) => {
+    indexRepo: async (url: string, userId?: string) => {
         const response = await fetch(`${API_URL}/index`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url }),
+            body: JSON.stringify({ url, userId }),
         });
         if (!response.ok) {
             const error = await response.json();
@@ -14,13 +14,13 @@ export const api = {
         return response.json();
     },
 
-    chat: async (query: string, repoName?: string) => {
+    chat: async (query: string, repoName?: string, repoId?: string) => {
         try {
             const normalizedRepo = repoName?.toLowerCase();
             const response = await fetch(`${API_URL}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query, repoName: normalizedRepo }),
+                body: JSON.stringify({ query, repoName: normalizedRepo, repoId }),
             });
 
             if (!response.ok) {
@@ -39,8 +39,8 @@ export const api = {
         }
     },
 
-    getGraph: async (repoName: string) => {
-        const response = await fetch(`${API_URL}/graph?repoName=${repoName.toLowerCase()}`);
+    getGraph: async (repoName: string, repoId?: string) => {
+        const response = await fetch(`${API_URL}/graph?repoName=${repoName.toLowerCase()}${repoId ? `&repoId=${repoId}` : ''}`);
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.details || error.error || 'Failed to fetch graph');
@@ -48,20 +48,20 @@ export const api = {
         return response.json();
     },
 
-    getFiles: async (repoName: string) => {
-        const response = await fetch(`${API_URL}/files?repoName=${repoName.toLowerCase()}`);
+    getFiles: async (repoName: string, repoId?: string) => {
+        const response = await fetch(`${API_URL}/files?repoName=${repoName.toLowerCase()}${repoId ? `&repoId=${repoId}` : ''}`);
         if (!response.ok) throw new Error('Failed to fetch files');
         return response.json();
     },
 
-    getFileContent: async (repoName: string, path: string) => {
-        const response = await fetch(`${API_URL}/file-content?repoName=${repoName.toLowerCase()}&path=${encodeURIComponent(path)}`);
+    getFileContent: async (repoName: string, path: string, repoId?: string) => {
+        const response = await fetch(`${API_URL}/file-content?repoName=${repoName.toLowerCase()}&path=${encodeURIComponent(path)}${repoId ? `&repoId=${repoId}` : ''}`);
         if (!response.ok) throw new Error('Failed to fetch file content');
         return response.json();
     },
 
-    getAnalytics: async (repoName: string) => {
-        const response = await fetch(`${API_URL}/analytics?repoName=${repoName.toLowerCase()}`);
+    getAnalytics: async (repoName: string, repoId?: string) => {
+        const response = await fetch(`${API_URL}/analytics?repoName=${repoName.toLowerCase()}${repoId ? `&repoId=${repoId}` : ''}`);
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.details || error.error || 'Failed to fetch analytics');
@@ -69,11 +69,11 @@ export const api = {
         return response.json();
     },
 
-    visualizeCode: async (repoName: string, filePath: string, type: string) => {
+    visualizeCode: async (repoName: string, filePath: string, type: string, repoId?: string) => {
         const response = await fetch(`${API_URL}/visualize`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ repoName: repoName.toLowerCase(), filePath, type }),
+            body: JSON.stringify({ repoName: repoName.toLowerCase(), filePath, type, repoId }),
         });
         if (!response.ok) {
             const error = await response.json();
@@ -82,16 +82,13 @@ export const api = {
         return response.json();
     },
 
-    deleteRepo: async (repoName: string) => {
+    deleteRepo: async (repoName: string, repoId?: string) => {
         const response = await fetch(`${API_URL}/delete`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ repoName: repoName.toLowerCase() }),
+            body: JSON.stringify({ repoName, repoId }),
         });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.details || error.error || 'Deletion failed');
-        }
+        if (!response.ok) throw new Error('Failed to delete repository');
         return response.json();
     }
 };

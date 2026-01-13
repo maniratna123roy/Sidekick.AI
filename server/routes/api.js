@@ -3,7 +3,16 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 
-const { cloneRepository, getCodeFiles, chunkCode, getDependencyGraph, getRepoFiles, getFileContent } = require('../services/repo');
+const {
+  cloneRepository,
+  getCodeFiles,
+  chunkCode,
+  getDependencyGraph,
+  getRepoFiles,
+  getFileContent,
+  syncRepoToDatabase
+} = require('../services/repo');
+const { supabase } = require('../services/supabase');
 const { generateEmbedding, generateResponse, generateMermaidDiagram } = require('../services/gemini');
 const { storeVectors, searchSimilarChunks, deleteVectorsByRepo } = require('../services/pinecone');
 const { getRepositoryAnalytics } = require('../services/analytics');
@@ -14,7 +23,7 @@ const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH
 
 // Index Repository
 router.post('/index', async (req, res) => {
-  const { url } = req.body;
+  const { url, userId } = req.body;
   if (!url) return res.status(400).json({ error: 'GitHub URL is required' });
 
   console.log(`[Indexer] Starting index for: ${url}`);
@@ -23,11 +32,31 @@ router.post('/index', async (req, res) => {
     const { localPath, repoName } = await cloneRepository(url);
     console.log(`[Indexer] Cloned to ${localPath}`);
 
-    // 2. Get Files
+    // 2. Fetch or Create Record in Supabase to get repoId
+    let repoId;
+    if (userId) {
+      const { data, error: dbError } = await supabase
+        .from('indexed_repositories')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('repo_name', repoName)
+        .single();
+
+      if (!dbError && data) {
+        repoId = data.id;
+      }
+    }
+
+    // 3. Sync to Database (Permanent Storage)
+    if (repoId) {
+      await syncRepoToDatabase(repoId, localPath);
+    }
+
+    // 4. Get Files for Vector Indexing
     const files = await getCodeFiles(localPath);
     console.log(`[Indexer] Found ${files.length} code files`);
 
-    // 3. Process & Embed
+    // 5. Process & Embed
     let totalChunks = 0;
     const vectorsToStore = [];
 
@@ -55,13 +84,13 @@ router.post('/index', async (req, res) => {
       totalChunks += chunks.length;
     }
 
-    // 4. Store in Pinecone
+    // 6. Store in Pinecone
     if (vectorsToStore.length > 0) {
       await storeVectors(vectorsToStore);
     }
 
     console.log(`[Indexer] Indexed ${totalChunks} chunks`);
-    res.json({ message: 'Repository indexed successfully', repo: repoName, stats: { files: files.length, chunks: totalChunks } });
+    res.json({ message: 'Repository indexed successfully', repo: repoName, repoId, stats: { files: files.length, chunks: totalChunks } });
 
   } catch (error) {
     console.error('[Indexer] Main process failed:', error);
@@ -118,44 +147,50 @@ router.post('/chat', async (req, res) => {
   }
 });
 
-// GET /api/files?repoName=name
+// GET /api/files?repoName=name&repoId=id
 router.get('/files', async (req, res) => {
-  let { repoName } = req.query;
+  let { repoName, repoId } = req.query;
   if (!repoName) return res.status(400).json({ error: "Repo name required" });
   repoName = repoName.toLowerCase();
 
   try {
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
-    const files = await getRepoFiles(repoPath);
+    const files = await getRepoFiles(repoPath, repoId);
     res.json({ files });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// GET /api/file-content?repoName=name&path=relative/path
+// GET /api/file-content?repoName=name&path=relative/path&repoId=id
 router.get('/file-content', async (req, res) => {
-  let { repoName, path: filePath } = req.query;
+  let { repoName, path: filePath, repoId } = req.query;
   if (!repoName || !filePath) return res.status(400).json({ error: "Repo name and path required" });
   repoName = repoName.toLowerCase();
 
   try {
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
-    const content = getFileContent(repoPath, filePath);
+    const content = await getFileContent(repoPath, filePath, repoId);
     res.json({ content });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// GET /api/graph?repoName=name
+// GET /api/graph?repoName=name&repoId=id
 router.get('/graph', async (req, res) => {
-  let { repoName } = req.query;
+  let { repoName, repoId } = req.query;
   if (!repoName) return res.status(400).json({ error: "Repo name required" });
   repoName = repoName.toLowerCase();
 
   try {
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
+
+    // Check if repo exists on disk, if not, we might need a DB-backed graph generator
+    // For now, if it's missing from disk but we have a repoId, we can't easily generate the graph 
+    // unless we re-clone or store the graph itself.
+    // Optimization: Fallback to disk, but ideally graph should be generated from DB files if disk is wiped.
+
     const graph = await getDependencyGraph(repoPath);
     res.json(graph);
   } catch (error) {
@@ -188,13 +223,13 @@ router.get('/analytics', async (req, res) => {
 
 // POST /api/visualize
 router.post('/visualize', async (req, res) => {
-  let { repoName, filePath, type } = req.body;
+  let { repoName, filePath, type, repoId } = req.body;
   if (!repoName || !filePath) return res.status(400).json({ error: "Repo name and file path required" });
   repoName = repoName.toLowerCase();
 
   try {
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
-    const content = getFileContent(repoPath, filePath);
+    const content = await getFileContent(repoPath, filePath, repoId);
 
     if (!content) throw new Error("File content is empty");
 
@@ -208,19 +243,28 @@ router.post('/visualize', async (req, res) => {
 
 // DELETE /api/delete
 router.delete('/delete', async (req, res) => {
-  let { repoName } = req.body;
+  let { repoName, repoId } = req.body;
   if (!repoName) return res.status(400).json({ error: "Repo name required" });
   repoName = repoName.toLowerCase();
 
   try {
     const repoPath = path.join(REPO_STORAGE_PATH, repoName);
 
+    // 1. Clean up local files
     if (fs.existsSync(repoPath)) {
       fs.rmSync(repoPath, { recursive: true, force: true });
     }
 
     // 2. Clean up Pinecone vectors
     await deleteVectorsByRepo(repoName);
+
+    // 3. Clean up Supabase files (Permanent Storage)
+    if (repoId) {
+      await supabase
+        .from('repository_files')
+        .delete()
+        .eq('repository_id', repoId);
+    }
 
     res.json({ message: `Repository ${repoName} deleted successfully` });
   } catch (error) {

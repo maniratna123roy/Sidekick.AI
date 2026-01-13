@@ -18,7 +18,7 @@ interface GraphLink {
     target: string;
 }
 
-const KnowledgeGraph = ({ repoName, allRepos = [] }: { repoName: string, allRepos?: string[] }) => {
+const KnowledgeGraph = ({ repoName, allRepos = [], repoId }: { repoName: string, allRepos?: string[], repoId?: string }) => {
     const [rawTree, setRawTree] = useState<{ nodes: GraphNode[], links: GraphLink[] }>({ nodes: [], links: [] });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -34,7 +34,7 @@ const KnowledgeGraph = ({ repoName, allRepos = [] }: { repoName: string, allRepo
             if (!localRepo) return;
             setLoading(true);
             try {
-                const response = await api.getFiles(localRepo);
+                const response = await api.getFiles(localRepo, repoId);
                 const files = response.files;
 
                 const nodes: GraphNode[] = [];
@@ -128,7 +128,7 @@ const KnowledgeGraph = ({ repoName, allRepos = [] }: { repoName: string, allRepo
         setReadingVisible(true);
         setFileContent(null);
         try {
-            const response = await api.getFileContent(localRepo, node.id);
+            const response = await api.getFileContent(localRepo, node.id, repoId);
             setFileContent(response.content);
         } catch (err) {
             setFileContent("Error loading file content.");

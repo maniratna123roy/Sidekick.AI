@@ -20,7 +20,7 @@ mermaid.initialize({
     }
 });
 
-const LogicVizView = ({ repoName }: { repoName: string }) => {
+const LogicVizView = ({ repoName, repoId }: { repoName: string, repoId?: string }) => {
     const [files, setFiles] = useState<string[]>([]);
     const [selectedFile, setSelectedFile] = useState<string>('');
     const [diagramType, setDiagramType] = useState<'flowchart' | 'sequence' | 'class'>('flowchart');
@@ -35,7 +35,7 @@ const LogicVizView = ({ repoName }: { repoName: string }) => {
             if (!repoName) return;
             setIsFetchingFiles(true);
             try {
-                const response = await api.getFiles(repoName);
+                const response = await api.getFiles(repoName, repoId);
                 setFiles(response.files || []);
             } catch (err: any) {
                 toast.error("Failed to load repository files");
@@ -56,7 +56,7 @@ const LogicVizView = ({ repoName }: { repoName: string }) => {
         setRenderError(null);
 
         try {
-            const result = await api.visualizeCode(repoName, selectedFile, diagramType);
+            const result = await api.visualizeCode(repoName, selectedFile, diagramType, repoId);
             console.log('[LogicViz] API Response:', result);
             console.log('[LogicViz] Diagram length:', result.diagram?.length || 0);
             console.log('[LogicViz] Diagram content:', result.diagram);

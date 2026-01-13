@@ -2,6 +2,7 @@ const simpleGit = require('simple-git');
 const { glob } = require('glob');
 const fs = require('fs');
 const path = require('path');
+const { supabase } = require('./supabase');
 
 const REPO_STORAGE_PATH = process.env.REPO_STORAGE_PATH
     ? path.resolve(path.join(__dirname, '..'), process.env.REPO_STORAGE_PATH)
@@ -50,6 +51,41 @@ async function getCodeFiles(directory) {
     };
 
     return await glob(pattern, options);
+}
+
+/**
+ * Sync repository files to Supabase
+ * @param {string} repoId - The UUID from indexed_repositories table
+ * @param {string} localPath - Local path where repo is cloned
+ */
+async function syncRepoToDatabase(repoId, localPath) {
+    console.log(`[RepoSync] Starting sync for repoId: ${repoId}`);
+    const files = await getCodeFiles(localPath);
+
+    // Process in batches to avoid overwhelming Supabase
+    const batchSize = 20;
+    for (let i = 0; i < files.length; i += batchSize) {
+        const batch = files.slice(i, i + batchSize);
+        const records = batch.map(file => {
+            const relativePath = path.relative(localPath, file).replace(/\\/g, '/');
+            const content = fs.readFileSync(file, 'utf-8');
+            return {
+                repo_id: repoId,
+                path: relativePath,
+                content: content,
+                is_binary: false // For now we only sync code files
+            };
+        });
+
+        const { error } = await supabase
+            .from('repository_files')
+            .upsert(records, { onConflict: 'repo_id,path' });
+
+        if (error) {
+            console.error(`[RepoSync] Error syncing batch starting at ${i}:`, error.message);
+        }
+    }
+    console.log(`[RepoSync] Sync complete for repoId: ${repoId}. Total files: ${files.length}`);
 }
 
 
@@ -148,7 +184,19 @@ async function getDependencyGraph(repoPath) {
  * @param {string} repoPath 
  * @returns {Promise<string[]>}
  */
-async function getRepoFiles(repoPath) {
+async function getRepoFiles(repoPath, repoId) {
+    if (repoId) {
+        const { data, error } = await supabase
+            .from('repository_files')
+            .select('path')
+            .eq('repo_id', repoId);
+
+        if (!error && data) {
+            return data.map(f => f.path);
+        }
+        console.warn(`[DB] Failed to fetch files from DB for ${repoId}, falling back to disk:`, error?.message);
+    }
+
     const files = await glob('**/*', {
         cwd: repoPath,
         ignore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.git/**'],
@@ -161,9 +209,24 @@ async function getRepoFiles(repoPath) {
  * Get content of a specific file
  * @param {string} repoPath 
  * @param {string} relativePath 
- * @returns {string}
+ * @param {string} repoId
+ * @returns {Promise<string>}
  */
-function getFileContent(repoPath, relativePath) {
+async function getFileContent(repoPath, relativePath, repoId) {
+    if (repoId) {
+        const { data, error } = await supabase
+            .from('repository_files')
+            .select('content')
+            .eq('repo_id', repoId)
+            .eq('path', relativePath.replace(/\\/g, '/'))
+            .single();
+
+        if (!error && data) {
+            return data.content;
+        }
+        console.warn(`[DB] Failed to fetch file content from DB for ${repoId}:${relativePath}, falling back to disk:`, error?.message);
+    }
+
     const fullPath = path.join(repoPath, relativePath);
     if (!fs.existsSync(fullPath)) throw new Error("File not found");
     return fs.readFileSync(fullPath, 'utf-8');

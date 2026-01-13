@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#6366f1'];
 
-const RepoAnalyticsView = ({ repoName, repoUrl }: { repoName: string, repoUrl?: string }) => {
+const RepoAnalyticsView = ({ repoName, repoUrl, repoId }: { repoName: string, repoUrl?: string, repoId?: string }) => {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [restoring, setRestoring] = useState(false);
@@ -22,7 +22,7 @@ const RepoAnalyticsView = ({ repoName, repoUrl }: { repoName: string, repoUrl?: 
             if (!repoName) return;
             setLoading(true);
             try {
-                const result = await api.getAnalytics(repoName);
+                const result = await api.getAnalytics(repoName, repoId);
                 setData(result);
                 setError(null);
             } catch (err: any) {
@@ -33,7 +33,7 @@ const RepoAnalyticsView = ({ repoName, repoUrl }: { repoName: string, repoUrl?: 
                         // Re-index silently
                         await api.indexRepo(repoUrl);
                         // Retry analytics fetch
-                        const retryResult = await api.getAnalytics(repoName);
+                        const retryResult = await api.getAnalytics(repoName, repoId);
                         setData(retryResult);
                         setError(null);
                     } catch (restoreError: any) {

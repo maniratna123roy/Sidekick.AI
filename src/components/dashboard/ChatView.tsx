@@ -15,7 +15,7 @@ interface Message {
     sources?: any[];
 }
 
-const ChatView = ({ indexedRepos, initialRepo }: { indexedRepos: string[], initialRepo: string | null }) => {
+const ChatView = ({ indexedRepos, initialRepo, repoId }: { indexedRepos: string[], initialRepo: string | null, repoId?: string }) => {
     const [query, setQuery] = useState('');
     const [messages, setMessages] = useState<Message[]>([]);
     const [isChatting, setIsChatting] = useState(false);
@@ -82,7 +82,7 @@ const ChatView = ({ indexedRepos, initialRepo }: { indexedRepos: string[], initi
                 content: userMsg.content
             }]);
 
-            const result = await api.chat(userMsg.content, activeRepo || undefined);
+            const result = await api.chat(userMsg.content, activeRepo || undefined, repoId);
 
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),

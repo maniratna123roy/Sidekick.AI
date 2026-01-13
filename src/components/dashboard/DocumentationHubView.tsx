@@ -4,7 +4,7 @@ import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { useCallback } from 'react';
 
-const DocumentationHubView = ({ indexedRepos, initialRepo }: { indexedRepos: string[], initialRepo: string | null }) => {
+const DocumentationHubView = ({ indexedRepos, initialRepo, repoId }: { indexedRepos: string[], initialRepo: string | null, repoId?: string }) => {
     const [doc, setDoc] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -27,7 +27,8 @@ const DocumentationHubView = ({ indexedRepos, initialRepo }: { indexedRepos: str
         try {
             const response = await api.chat(
                 `SYSTEM: DOCUMENTATION MODE. GENERATE A COMPREHENSIVE ${activeSection.toUpperCase()} GUIDE FOR THIS REPOSITORY. USE MARKDOWN.`,
-                repo
+                repo || undefined,
+                repoId
             );
             setDoc(response.answer);
         } catch (err: any) {

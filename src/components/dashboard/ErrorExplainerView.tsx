@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/lib/api';
 
-const ErrorExplainerView = ({ indexedRepos, initialRepo }: { indexedRepos: string[], initialRepo: string | null }) => {
+const ErrorExplainerView = ({ indexedRepos, initialRepo, repoId }: { indexedRepos: string[], initialRepo: string | null, repoId?: string }) => {
     const [trace, setTrace] = useState('');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [result, setResult] = useState<any>(null);
@@ -17,7 +17,8 @@ const ErrorExplainerView = ({ indexedRepos, initialRepo }: { indexedRepos: strin
             const contextRepo = localRepo || (indexedRepos.length > 0 ? indexedRepos[indexedRepos.length - 1] : undefined);
             const response = await api.chat(
                 `SYSTEM: ANALYZE ERROR MODE. EXPLAIN THE FOLLOWING STACK TRACE/LOG AND LINK TO FILES IN THE REPO: \n\n ${trace}`,
-                contextRepo
+                contextRepo || undefined,
+                repoId
             );
             setResult(response.answer);
         } catch (err: any) {
