@@ -30,7 +30,6 @@ const LogicVizView = ({ repoName, repoId, repoUrl }: { repoName: string, repoId?
     const [isFetchingFiles, setIsFetchingFiles] = useState(true);
     const [restoring, setRestoring] = useState(false);
     const [tookTooLong, setTookTooLong] = useState(false);
-    const [tookTooLong, setTookTooLong] = useState(false);
     const [retryKey, setRetryKey] = useState(0);
     const mermaidRef = useRef<HTMLDivElement>(null);
 
