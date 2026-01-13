@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import mermaid from 'mermaid';
 import { api } from '@/lib/api';
-import { Loader2, Share2, FileCode, GitBranch, Activity, Layers, Download } from 'lucide-react';
+import { Loader2, Share2, FileCode, GitBranch, Activity, Layers, Download, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -28,12 +28,20 @@ const LogicVizView = ({ repoName, repoId }: { repoName: string, repoId?: string 
     const [renderError, setRenderError] = useState<{ type: 'syntax' | 'import', message: string } | null>(null);
     const [loading, setLoading] = useState(false);
     const [isFetchingFiles, setIsFetchingFiles] = useState(true);
+    const [tookTooLong, setTookTooLong] = useState(false);
+    const [retryKey, setRetryKey] = useState(0);
     const mermaidRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchFiles = async () => {
             if (!repoName) return;
             setIsFetchingFiles(true);
+            setTookTooLong(false);
+
+            const timeout = setTimeout(() => {
+                if (isFetchingFiles) setTookTooLong(true);
+            }, 3000);
+
             try {
                 const response = await api.getFiles(repoName, repoId);
                 setFiles(response.files || []);
@@ -41,10 +49,11 @@ const LogicVizView = ({ repoName, repoId }: { repoName: string, repoId?: string 
                 toast.error("Failed to load repository files");
             } finally {
                 setIsFetchingFiles(false);
+                clearTimeout(timeout);
             }
         };
         fetchFiles();
-    }, [repoName]);
+    }, [repoName, retryKey]);
 
     const handleGenerate = async () => {
         if (!selectedFile) {
@@ -54,6 +63,11 @@ const LogicVizView = ({ repoName, repoId }: { repoName: string, repoId?: string 
         setLoading(true);
         setDiagram('');
         setRenderError(null);
+        setTookTooLong(false);
+
+        const genTimeout = setTimeout(() => {
+            if (loading) setTookTooLong(true);
+        }, 3000);
 
         try {
             const result = await api.visualizeCode(repoName, selectedFile, diagramType, repoId);
@@ -71,6 +85,7 @@ const LogicVizView = ({ repoName, repoId }: { repoName: string, repoId?: string 
             toast.error(`Visualization failed: ${err.message}`);
         } finally {
             setLoading(false);
+            clearTimeout(genTimeout);
         }
     };
 
@@ -161,7 +176,21 @@ const LogicVizView = ({ repoName, repoId }: { repoName: string, repoId?: string 
 
                     <div className="flex flex-wrap items-center gap-4">
                         <div className="flex flex-col gap-1.5">
-                            <label className="text-[10px] font-mono uppercase text-muted-foreground ml-1">Select logic source</label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-[10px] font-mono uppercase text-muted-foreground ml-1">Select logic source</label>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-4 p-0 text-[10px] uppercase text-muted-foreground hover:text-primary transition-colors"
+                                    onClick={() => {
+                                        setRetryKey(k => k + 1);
+                                        setDiagram('');
+                                    }}
+                                >
+                                    <RefreshCw className="w-3 h-3 mr-1" />
+                                    Repair
+                                </Button>
+                            </div>
                             <select
                                 value={selectedFile}
                                 onChange={(e) => setSelectedFile(e.target.value)}
@@ -221,13 +250,28 @@ const LogicVizView = ({ repoName, repoId }: { repoName: string, repoId?: string 
                             exit={{ opacity: 0 }}
                             className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm z-10"
                         >
-                            <div className="relative">
-                                <div className="w-24 h-24 border-2 border-primary/20 rounded-full" />
-                                <div className="absolute inset-0 w-24 h-24 border-t-2 border-primary rounded-full animate-spin" />
-                                <Activity className="absolute inset-0 m-auto w-8 h-8 text-primary animate-pulse" />
+                            <div className="glass-panel p-12 rounded-3xl border-white/5 bg-black/40 text-center space-y-6 max-w-sm">
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-primary/20 blur-2xl animate-pulse rounded-full" />
+                                    <Loader2 className="w-12 h-12 text-primary animate-spin relative mx-auto" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h3 className="text-xl font-bold">Decoding Logic...</h3>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">AI is analyzing control flows and dependencies to generate your map.</p>
+                                </div>
+                                {tookTooLong && (
+                                    <div className="pt-2 animate-in fade-in slide-in-from-bottom-4">
+                                        <p className="text-[10px] text-amber-500 font-mono uppercase mb-4 tracking-tighter">Taking longer than 3s...</p>
+                                        <Button
+                                            size="sm"
+                                            className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30"
+                                            onClick={() => setRetryKey(k => k + 1)}
+                                        >
+                                            Force Restoration
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
-                            <p className="mt-6 text-xs font-mono uppercase tracking-[0.3em] text-primary animate-pulse">Scanning Code Structure</p>
-                            <p className="mt-2 text-[10px] text-muted-foreground font-mono">Gemini is mapping logic paths...</p>
                         </motion.div>
                     ) : !diagram ? (
                         <motion.div

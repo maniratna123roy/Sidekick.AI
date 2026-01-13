@@ -27,12 +27,20 @@ const KnowledgeGraph = ({ repoName, repoId }: { repoName: string, repoId?: strin
     const [fileContent, setFileContent] = useState<string | null>(null);
     const [readingVisible, setReadingVisible] = useState(false);
     const [zoom, setZoom] = useState(1);
+    const [tookTooLong, setTookTooLong] = useState(false);
+    const [retryCount, setRetryCount] = useState(0);
     const fgRef = useRef<any>();
 
     useEffect(() => {
         const fetchFiles = async () => {
             if (!repoName) return;
             setLoading(true);
+            setTookTooLong(false);
+
+            const timeout = setTimeout(() => {
+                if (loading) setTookTooLong(true);
+            }, 3000);
+
             try {
                 const response = await api.getFiles(repoName, repoId);
                 const files = response.files;
@@ -77,11 +85,12 @@ const KnowledgeGraph = ({ repoName, repoId }: { repoName: string, repoId?: strin
                 setError(err.message);
             } finally {
                 setLoading(false);
+                clearTimeout(timeout);
             }
         };
 
         fetchFiles();
-    }, [repoName, repoId]);
+    }, [repoName, repoId, retryCount]);
 
     // Compute visible nodes based on expansion state
     const visibleData = useMemo(() => {
@@ -162,6 +171,29 @@ const KnowledgeGraph = ({ repoName, repoId }: { repoName: string, repoId?: strin
     return (
         <div className="h-full w-full relative group flex">
             <div className="flex-1 relative overflow-hidden">
+                {loading && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                        <div className="glass-panel p-8 rounded-2xl border-white/5 bg-black/40 max-w-sm text-center space-y-4">
+                            <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
+                            <div className="space-y-2">
+                                <h3 className="font-bold">Building Map...</h3>
+                                <p className="text-xs text-muted-foreground">Scanning files and generating your codebase architecture.</p>
+                            </div>
+                            {tookTooLong && (
+                                <div className="pt-4 space-y-3 animate-in fade-in slide-in-from-bottom-4">
+                                    <p className="text-[10px] text-amber-500 font-mono uppercase">Taking longer than 3s...</p>
+                                    <Button
+                                        size="sm"
+                                        className="w-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 border-amber-500/30"
+                                        onClick={() => setRetryCount(prev => prev + 1)}
+                                    >
+                                        Force Restore
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
                 {/* Controls HUD */}
                 <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
                     <div className="glass-panel bg-black/40 p-1 rounded-xl border border-white/5 flex flex-col gap-1 backdrop-blur-md">
@@ -176,11 +208,23 @@ const KnowledgeGraph = ({ repoName, repoId }: { repoName: string, repoId?: strin
                         </Button>
                     </div>
 
-                    <div className="glass-panel bg-black/40 p-1.5 rounded-xl border border-white/5 backdrop-blur-md">
-                        <div className="flex items-center gap-2">
+                    <div className="glass-panel bg-black/40 p-1.5 rounded-xl border border-white/5 backdrop-blur-md flex items-center gap-2">
+                        <div className="flex items-center gap-2 pr-2 border-r border-white/10">
                             <div className="w-2 h-2 rounded-full bg-primary" />
                             <span className="text-[10px] font-mono text-slate-300 uppercase tracking-tighter">Repository: {repoName}</span>
                         </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-[10px] font-mono uppercase text-muted-foreground hover:text-white"
+                            onClick={() => {
+                                setRetryCount(prev => prev + 1);
+                                setRawTree({ nodes: [], links: [] });
+                            }}
+                        >
+                            <RefreshCw className={cn("w-3 h-3 mr-1", loading && "animate-spin")} />
+                            Repair
+                        </Button>
                     </div>
                 </div>
 
