@@ -258,12 +258,19 @@ router.delete('/delete', async (req, res) => {
     // 2. Clean up Pinecone vectors
     await deleteVectorsByRepo(repoName);
 
-    // 3. Clean up Supabase files (Permanent Storage)
+    // 3. Clean up Supabase (Permanent Storage)
     if (repoId) {
+      // Deleting from indexed_repositories will cascade to repository_files
       await supabase
-        .from('repository_files')
+        .from('indexed_repositories')
         .delete()
-        .eq('repository_id', repoId);
+        .eq('id', repoId);
+    } else {
+      // Fallback to name if ID not provided (though ID is preferred)
+      await supabase
+        .from('indexed_repositories')
+        .delete()
+        .eq('repo_name', repoName);
     }
 
     res.json({ message: `Repository ${repoName} deleted successfully` });

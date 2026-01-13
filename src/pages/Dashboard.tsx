@@ -158,31 +158,15 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
         }
     };
 
-    const handleDeleteRepo = async (repoName: string) => {
+    const handleDeleteRepo = async (repoName: string, repoId: string) => {
         if (!confirm(`Are you sure you want to delete ${repoName}? This cannot be undone.`)) return;
 
         try {
-            // 1. Delete from Server
-            await api.deleteRepo(repoName);
+            // 1. Delete from Server (Handles local files, vectors, and Supabase records)
+            await api.deleteRepo(repoName, repoId);
 
-            // 2. Delete from Supabase (Case-Insensitive)
-            // We use .ilike or simply delete all variations we know about. 
-            // The cleanest way in Supabase for case-insensitive matching is often ilike or multiple eqs.
-            // But since we have the full list in state, we can just filter matching ones.
-            const variationsToDelete = indexedRepos.filter(r => r.name.toLowerCase() === repoName.toLowerCase());
-
-            for (const variant of variationsToDelete) {
-                const { error } = await (supabase as any)
-                    .from('indexed_repositories')
-                    .delete()
-                    .eq('user_id', user.id)
-                    .eq('repo_name', variant.name);
-
-                if (error) console.error(`[Delete] Failed for variant ${variant.name}:`, error);
-            }
-
-            // 3. Update State
-            setIndexedRepos(prev => prev.filter(r => r.name.toLowerCase() !== repoName.toLowerCase()));
+            // 2. Update State
+            setIndexedRepos(prev => prev.filter(r => r.id !== repoId));
             if (globalSelectedRepo?.toLowerCase() === repoName.toLowerCase()) {
                 setGlobalSelectedRepo(null);
             }
@@ -200,23 +184,25 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
         }
     };
 
-    const toggleRepoStatus = async (repoName: string, currentStatus: boolean) => {
+    const toggleRepoStatus = async (repoId: string, currentStatus: boolean) => {
         try {
             const { error } = await (supabase as any)
                 .from('indexed_repositories')
                 .update({ is_active: !currentStatus })
-                .eq('user_id', user.id)
-                .eq('repo_name', repoName);
+                .eq('id', repoId);
 
             if (error) throw error;
 
             setIndexedRepos(prev => prev.map(r =>
-                r.name === repoName ? { ...r, is_active: !currentStatus } : r
+                r.id === repoId ? { ...r, is_active: !currentStatus } : r
             ));
+
+            const foundRepo = indexedRepos.find(r => r.id === repoId);
+            const nameToDisplay = foundRepo?.name || 'Repository';
 
             toast({
                 title: !currentStatus ? "Repository Activated" : "Repository Deactivated",
-                description: `${repoName} is now ${!currentStatus ? 'active' : 'inactive'}.`,
+                description: `${nameToDisplay} is now ${!currentStatus ? 'active' : 'inactive'}.`,
             });
         } catch (error: any) {
             toast({
@@ -361,7 +347,7 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                                                                         <span className="text-sm truncate">{repo.name}</span>
                                                                     </div>
                                                                     <button
-                                                                        onClick={() => toggleRepoStatus(repo.name, repo.is_active)}
+                                                                        onClick={() => toggleRepoStatus(repo.id, repo.is_active)}
                                                                         className={cn(
                                                                             "w-8 h-4 rounded-full relative transition-colors duration-200",
                                                                             repo.is_active ? "bg-primary" : "bg-white/10"
@@ -373,7 +359,7 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                                                                         )} />
                                                                     </button>
                                                                     <button
-                                                                        onClick={() => handleDeleteRepo(repo.name)}
+                                                                        onClick={() => handleDeleteRepo(repo.name, repo.id)}
                                                                         className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-red-400 transition-colors"
                                                                         title="Delete Repository"
                                                                     >
