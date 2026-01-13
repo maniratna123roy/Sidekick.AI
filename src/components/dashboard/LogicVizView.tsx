@@ -20,7 +20,7 @@ mermaid.initialize({
     }
 });
 
-const LogicVizView = ({ repoName, repoId }: { repoName: string, repoId?: string }) => {
+const LogicVizView = ({ repoName, repoId, repoUrl }: { repoName: string, repoId?: string, repoUrl?: string }) => {
     const [files, setFiles] = useState<string[]>([]);
     const [selectedFile, setSelectedFile] = useState<string>('');
     const [diagramType, setDiagramType] = useState<'flowchart' | 'sequence' | 'class'>('flowchart');
@@ -28,6 +28,8 @@ const LogicVizView = ({ repoName, repoId }: { repoName: string, repoId?: string 
     const [renderError, setRenderError] = useState<{ type: 'syntax' | 'import', message: string } | null>(null);
     const [loading, setLoading] = useState(false);
     const [isFetchingFiles, setIsFetchingFiles] = useState(true);
+    const [restoring, setRestoring] = useState(false);
+    const [tookTooLong, setTookTooLong] = useState(false);
     const [tookTooLong, setTookTooLong] = useState(false);
     const [retryKey, setRetryKey] = useState(0);
     const mermaidRef = useRef<HTMLDivElement>(null);
@@ -46,7 +48,20 @@ const LogicVizView = ({ repoName, repoId }: { repoName: string, repoId?: string 
                 const response = await api.getFiles(repoName, repoId);
                 setFiles(response.files || []);
             } catch (err: any) {
-                toast.error("Failed to load repository files");
+                if (err.message && err.message.toLowerCase().includes('repository not found') && repoUrl) {
+                    setRestoring(true);
+                    try {
+                        await api.indexRepo(repoUrl);
+                        const retryResponse = await api.getFiles(repoName, repoId);
+                        setFiles(retryResponse.files || []);
+                    } catch (restoreError) {
+                        toast.error("Restoration failed");
+                    } finally {
+                        setRestoring(false);
+                    }
+                } else {
+                    toast.error("Failed to load repository files");
+                }
             } finally {
                 setIsFetchingFiles(false);
                 clearTimeout(timeout);
@@ -256,8 +271,8 @@ const LogicVizView = ({ repoName, repoId }: { repoName: string, repoId?: string 
                                     <Loader2 className="w-12 h-12 text-primary animate-spin relative mx-auto" />
                                 </div>
                                 <div className="space-y-2">
-                                    <h3 className="text-xl font-bold">Decoding Logic...</h3>
-                                    <p className="text-sm text-muted-foreground leading-relaxed">AI is analyzing control flows and dependencies to generate your map.</p>
+                                    <h3 className="text-xl font-bold">{restoring ? 'Restoring Engine...' : 'Decoding Logic...'}</h3>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">{restoring ? 'Re-syncing with source for visualization...' : 'AI is analyzing control flows and dependencies to generate your map.'}</p>
                                 </div>
                                 {tookTooLong && (
                                     <div className="pt-2 animate-in fade-in slide-in-from-bottom-4">

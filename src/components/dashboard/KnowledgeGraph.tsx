@@ -18,9 +18,10 @@ interface GraphLink {
     target: string;
 }
 
-const KnowledgeGraph = ({ repoName, repoId }: { repoName: string, repoId?: string }) => {
+const KnowledgeGraph = ({ repoName, repoId, repoUrl }: { repoName: string, repoId?: string, repoUrl?: string }) => {
     const [rawTree, setRawTree] = useState<{ nodes: GraphNode[], links: GraphLink[] }>({ nodes: [], links: [] });
     const [loading, setLoading] = useState(true);
+    const [restoring, setRestoring] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['root']));
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -79,10 +80,24 @@ const KnowledgeGraph = ({ repoName, repoId }: { repoName: string, repoId?: strin
                 });
 
                 setRawTree({ nodes, links });
-                setExpandedFolders(new Set(['root'])); // Auto-expand root to show main branches
+                setExpandedFolders(new Set(['root']));
                 setError(null);
             } catch (err: any) {
-                setError(err.message);
+                if (err.message && err.message.toLowerCase().includes('repository not found') && repoUrl) {
+                    setRestoring(true);
+                    try {
+                        await api.indexRepo(repoUrl);
+                        const retryResponse = await api.getFiles(repoName, repoId);
+                        // Recursive call or just logic here
+                        setRetryCount(prev => prev + 1);
+                    } catch (restoreError: any) {
+                        setError(`Restoration failed: ${restoreError.message}`);
+                    } finally {
+                        setRestoring(false);
+                    }
+                } else {
+                    setError(err.message);
+                }
             } finally {
                 setLoading(false);
                 clearTimeout(timeout);
@@ -176,8 +191,8 @@ const KnowledgeGraph = ({ repoName, repoId }: { repoName: string, repoId?: strin
                         <div className="glass-panel p-8 rounded-2xl border-white/5 bg-black/40 max-w-sm text-center space-y-4">
                             <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
                             <div className="space-y-2">
-                                <h3 className="font-bold">Building Map...</h3>
-                                <p className="text-xs text-muted-foreground">Scanning files and generating your codebase architecture.</p>
+                                <h3 className="font-bold">{restoring ? 'Restoring Repository...' : 'Building Map...'}</h3>
+                                <p className="text-xs text-muted-foreground">{restoring ? 'Synchronizing files from database/source...' : 'Scanning files and generating your codebase architecture.'}</p>
                             </div>
                             {tookTooLong && (
                                 <div className="pt-4 space-y-3 animate-in fade-in slide-in-from-bottom-4">

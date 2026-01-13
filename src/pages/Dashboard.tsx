@@ -415,7 +415,11 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                                     <div className="glass-panel rounded-2xl border-white/5 bg-white/5 min-h-[calc(100vh-12rem)] relative overflow-hidden flex flex-col">
                                         {/* Subview Rendering */}
                                         {effectiveTab === 'chat' && <ChatView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} repoId={globalSelectedRepoId} />}
-                                        {effectiveTab === 'map' && <KnowledgeGraph repoName={globalSelectedRepo || primaryRepo} allRepos={activeRepos} repoId={globalSelectedRepoId} />}
+                                        {effectiveTab === 'map' && <KnowledgeGraph
+                                            repoName={globalSelectedRepo || primaryRepo}
+                                            repoId={globalSelectedRepoId}
+                                            repoUrl={selectedRepoData?.url}
+                                        />}
                                         {effectiveTab === 'explorer' && <FileExplorerView repoName={globalSelectedRepo || primaryRepo} allRepos={activeRepos} repoId={globalSelectedRepoId} />}
                                         {effectiveTab === 'error' && <ErrorExplainerView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} repoId={globalSelectedRepoId} />}
                                         {effectiveTab === 'docs' && <DocumentationHubView indexedRepos={activeRepos} initialRepo={globalSelectedRepo || activeRepos[0]} repoId={globalSelectedRepoId} />}
@@ -424,7 +428,11 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
                                             repoUrl={selectedRepoData?.url}
                                             repoId={globalSelectedRepoId}
                                         />}
-                                        {effectiveTab === 'visualize' && <LogicVizView repoName={globalSelectedRepo || primaryRepo} repoId={globalSelectedRepoId} />}
+                                        {effectiveTab === 'visualize' && <LogicVizView
+                                            repoName={globalSelectedRepo || primaryRepo}
+                                            repoId={globalSelectedRepoId}
+                                            repoUrl={selectedRepoData?.url}
+                                        />}
                                     </div>
                                 )}
                             </motion.div>
