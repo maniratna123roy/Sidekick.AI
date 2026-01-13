@@ -4,20 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/lib/api';
 
-const ErrorExplainerView = ({ indexedRepos, initialRepo, repoId }: { indexedRepos: string[], initialRepo: string | null, repoId?: string }) => {
+const ErrorExplainerView = ({ initialRepo: repoName, repoId }: { initialRepo: string | null, repoId?: string }) => {
     const [trace, setTrace] = useState('');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [result, setResult] = useState<any>(null);
-    const [localRepo, setLocalRepo] = useState<string | null>(initialRepo);
+    const [result, setResult] = useState<any>(null);
 
     const handleAnalyze = async () => {
         if (!trace.trim()) return;
         setIsAnalyzing(true);
         try {
-            const contextRepo = localRepo || (indexedRepos.length > 0 ? indexedRepos[indexedRepos.length - 1] : undefined);
             const response = await api.chat(
                 `SYSTEM: ANALYZE ERROR MODE. EXPLAIN THE FOLLOWING STACK TRACE/LOG AND LINK TO FILES IN THE REPO: \n\n ${trace}`,
-                contextRepo || undefined,
+                repoName || undefined,
                 repoId
             );
             setResult(response.answer);
@@ -38,20 +37,6 @@ const ErrorExplainerView = ({ indexedRepos, initialRepo, repoId }: { indexedRepo
                 <p className="text-muted-foreground text-sm">
                     Paste your stack trace, console logs, or failing test output. Sidekick will map it to your codebase.
                 </p>
-                {indexedRepos.length > 0 && (
-                    <div className="flex items-center gap-2 pt-2">
-                        <span className="text-[10px] font-mono text-muted-foreground uppercase">Analysis Context:</span>
-                        <select
-                            value={localRepo || ''}
-                            onChange={(e) => setLocalRepo(e.target.value)}
-                            className="text-xs font-bold bg-white/5 border border-white/10 rounded-lg px-3 py-1 outline-none cursor-pointer hover:border-primary/50 transition-colors"
-                        >
-                            {indexedRepos.map(repo => (
-                                <option key={repo} value={repo} className="bg-[#0f0f0f]">{repo}</option>
-                            ))}
-                        </select>
-                    </div>
-                )}
             </div>
 
             <div className="glass-panel p-6 rounded-2xl border-white/5 bg-black/40 space-y-4">

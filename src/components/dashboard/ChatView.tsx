@@ -15,23 +15,15 @@ interface Message {
     sources?: any[];
 }
 
-const ChatView = ({ indexedRepos, initialRepo, repoId }: { indexedRepos: string[], initialRepo: string | null, repoId?: string }) => {
+const ChatView = ({ initialRepo: repoName, repoId }: { initialRepo: string | null, repoId?: string }) => {
     const [query, setQuery] = useState('');
     const [messages, setMessages] = useState<Message[]>([]);
     const [isChatting, setIsChatting] = useState(false);
-    const [localRepo, setLocalRepo] = useState<string | null>(initialRepo);
     const scrollRef = useRef<HTMLDivElement>(null);
-
-    // Sync with initialRepo when it changes from global selector
-    useEffect(() => {
-        if (initialRepo) setLocalRepo(initialRepo);
-    }, [initialRepo]);
-
-    const activeRepo = localRepo || (indexedRepos.length > 0 ? indexedRepos[indexedRepos.length - 1] : null);
 
     useEffect(() => {
         const fetchHistory = async () => {
-            if (!activeRepo) return;
+            if (!repoName) return;
 
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
@@ -40,7 +32,7 @@ const ChatView = ({ indexedRepos, initialRepo, repoId }: { indexedRepos: string[
                 .from('chat_messages')
                 .select('*')
                 .eq('user_id', user.id)
-                .eq('repo_name', activeRepo)
+                .eq('repo_name', repoName)
                 .order('created_at', { ascending: true });
 
             if (data && !error) {
@@ -53,7 +45,7 @@ const ChatView = ({ indexedRepos, initialRepo, repoId }: { indexedRepos: string[
         };
 
         fetchHistory();
-    }, [activeRepo]);
+    }, [repoName]);
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -77,12 +69,12 @@ const ChatView = ({ indexedRepos, initialRepo, repoId }: { indexedRepos: string[
             // Save user msg to DB
             await (supabase as any).from('chat_messages').insert([{
                 user_id: user.id,
-                repo_name: activeRepo,
+                repo_name: repoName,
                 role: 'user',
                 content: userMsg.content
             }]);
 
-            const result = await api.chat(userMsg.content, activeRepo || undefined, repoId);
+            const result = await api.chat(userMsg.content, repoName || undefined, repoId);
 
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),
@@ -94,7 +86,7 @@ const ChatView = ({ indexedRepos, initialRepo, repoId }: { indexedRepos: string[
             // Save AI msg to DB
             await (supabase as any).from('chat_messages').insert([{
                 user_id: user.id,
-                repo_name: activeRepo,
+                repo_name: repoName,
                 role: 'assistant',
                 content: aiMsg.content
             }]);
@@ -120,20 +112,6 @@ const ChatView = ({ indexedRepos, initialRepo, repoId }: { indexedRepos: string[
                     <MessageSquare className="w-5 h-5 text-primary" />
                     <h2 className="font-bold font-display tracking-tight">AI Assistant</h2>
                 </div>
-                {indexedRepos.length > 0 && (
-                    <div className="flex items-center gap-2 group">
-                        <select
-                            value={localRepo || ''}
-                            onChange={(e) => setLocalRepo(e.target.value)}
-                            className="text-[10px] font-mono text-muted-foreground uppercase px-3 py-1.5 rounded-full bg-black/20 border border-white/5 hover:border-primary/50 transition-all outline-none cursor-pointer"
-                        >
-                            {indexedRepos.map(repo => (
-                                <option key={repo} value={repo} className="bg-[#0f0f0f]">{repo}</option>
-                            ))}
-                        </select>
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                    </div>
-                )}
             </div>
 
             {/* Messages */}

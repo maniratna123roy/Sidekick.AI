@@ -18,23 +18,23 @@ interface GraphLink {
     target: string;
 }
 
-const KnowledgeGraph = ({ repoName, allRepos = [], repoId }: { repoName: string, allRepos?: string[], repoId?: string }) => {
+const KnowledgeGraph = ({ repoName, repoId }: { repoName: string, repoId?: string }) => {
     const [rawTree, setRawTree] = useState<{ nodes: GraphNode[], links: GraphLink[] }>({ nodes: [], links: [] });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [localRepo, setLocalRepo] = useState<string>(repoName);
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['root']));
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
     const [fileContent, setFileContent] = useState<string | null>(null);
     const [readingVisible, setReadingVisible] = useState(false);
+    const [zoom, setZoom] = useState(1);
     const fgRef = useRef<any>();
 
     useEffect(() => {
-        const fetchTree = async () => {
-            if (!localRepo) return;
+        const fetchFiles = async () => {
+            if (!repoName) return;
             setLoading(true);
             try {
-                const response = await api.getFiles(localRepo, repoId);
+                const response = await api.getFiles(repoName, repoId);
                 const files = response.files;
 
                 const nodes: GraphNode[] = [];
@@ -42,7 +42,7 @@ const KnowledgeGraph = ({ repoName, allRepos = [], repoId }: { repoName: string,
                 const seenPaths = new Set<string>();
 
                 // Root node
-                nodes.push({ id: 'root', label: localRepo, type: 'folder' });
+                nodes.push({ id: 'root', label: repoName, type: 'folder' });
                 seenPaths.add('root');
 
                 files.forEach((path: string) => {
@@ -80,8 +80,8 @@ const KnowledgeGraph = ({ repoName, allRepos = [], repoId }: { repoName: string,
             }
         };
 
-        fetchTree();
-    }, [localRepo]);
+        fetchFiles();
+    }, [repoName, repoId]);
 
     // Compute visible nodes based on expansion state
     const visibleData = useMemo(() => {
@@ -128,7 +128,7 @@ const KnowledgeGraph = ({ repoName, allRepos = [], repoId }: { repoName: string,
         setReadingVisible(true);
         setFileContent(null);
         try {
-            const response = await api.getFileContent(localRepo, node.id, repoId);
+            const response = await api.getFileContent(repoName, node.id, repoId);
             setFileContent(response.content);
         } catch (err) {
             setFileContent("Error loading file content.");
@@ -176,19 +176,12 @@ const KnowledgeGraph = ({ repoName, allRepos = [], repoId }: { repoName: string,
                         </Button>
                     </div>
 
-                    {allRepos.length > 0 && (
-                        <div className="glass-panel bg-black/40 p-1.5 rounded-xl border border-white/5 backdrop-blur-md">
-                            <select
-                                value={localRepo}
-                                onChange={(e) => setLocalRepo(e.target.value)}
-                                className="text-[10px] font-mono text-muted-foreground uppercase px-2 py-1 bg-transparent border-none outline-none cursor-pointer w-32"
-                            >
-                                {allRepos.map(repo => (
-                                    <option key={repo} value={repo} className="bg-[#0f0f0f]">{repo}</option>
-                                ))}
-                            </select>
+                    <div className="glass-panel bg-black/40 p-1.5 rounded-xl border border-white/5 backdrop-blur-md">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-primary" />
+                            <span className="text-[10px] font-mono text-slate-300 uppercase tracking-tighter">Repository: {repoName}</span>
                         </div>
-                    )}
+                    </div>
                 </div>
 
                 <div className="absolute bottom-4 right-4 z-10 glass-panel bg-black/40 px-3 py-2 rounded-lg border border-white/5 text-[10px] font-mono text-muted-foreground flex gap-4 backdrop-blur-md">

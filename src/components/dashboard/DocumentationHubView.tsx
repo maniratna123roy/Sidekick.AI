@@ -4,12 +4,11 @@ import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { useCallback } from 'react';
 
-const DocumentationHubView = ({ indexedRepos, initialRepo, repoId }: { indexedRepos: string[], initialRepo: string | null, repoId?: string }) => {
+const DocumentationHubView = ({ initialRepo: repoName, repoId }: { initialRepo: string | null, repoId?: string }) => {
     const [doc, setDoc] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [result, setResult] = useState<any>(null);
+    g | null > (null);
     const [activeSection, setActiveSection] = useState('architecture');
-    const [localRepo, setLocalRepo] = useState<string | null>(initialRepo);
 
     const sections = [
         { id: 'architecture', label: 'Architecture Overview', icon: Book },
@@ -19,15 +18,10 @@ const DocumentationHubView = ({ indexedRepos, initialRepo, repoId }: { indexedRe
     ];
 
     const fetchDoc = useCallback(async () => {
-        const repo = localRepo || (indexedRepos.length > 0 ? indexedRepos[indexedRepos.length - 1] : null);
-        if (!repo) return;
-
-        setLoading(true);
-        setError(null);
         try {
             const response = await api.chat(
                 `SYSTEM: DOCUMENTATION MODE. GENERATE A COMPREHENSIVE ${activeSection.toUpperCase()} GUIDE FOR THIS REPOSITORY. USE MARKDOWN.`,
-                repo || undefined,
+                repoName || undefined,
                 repoId
             );
             setDoc(response.answer);
@@ -37,11 +31,11 @@ const DocumentationHubView = ({ indexedRepos, initialRepo, repoId }: { indexedRe
         } finally {
             setLoading(false);
         }
-    }, [localRepo, indexedRepos, activeSection]);
+    }, [repoName, repoId, activeSection]);
 
     useEffect(() => {
         fetchDoc();
-    }, [fetchDoc]);
+    }, [fetchDoc, repoName]);
 
     return (
         <div className="h-full flex flex-col md:flex-row">
@@ -49,17 +43,6 @@ const DocumentationHubView = ({ indexedRepos, initialRepo, repoId }: { indexedRe
             <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-white/5 p-4 space-y-4">
                 <div>
                     <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 px-2">Knowledge Base</h3>
-                    {indexedRepos.length > 0 && (
-                        <select
-                            value={localRepo || ''}
-                            onChange={(e) => setLocalRepo(e.target.value)}
-                            className="w-full text-xs font-bold bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 outline-none cursor-pointer hover:border-primary/50 transition-colors"
-                        >
-                            {indexedRepos.map(repo => (
-                                <option key={repo} value={repo} className="bg-[#0f0f0f]">{repo}</option>
-                            ))}
-                        </select>
-                    )}
                 </div>
 
                 <div className="space-y-1">
