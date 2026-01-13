@@ -6,8 +6,8 @@ import { useCallback } from 'react';
 
 const DocumentationHubView = ({ initialRepo: repoName, repoId }: { initialRepo: string | null, repoId?: string }) => {
     const [doc, setDoc] = useState<string | null>(null);
-    const [result, setResult] = useState<any>(null);
-    g | null > (null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [activeSection, setActiveSection] = useState('architecture');
 
     const sections = [

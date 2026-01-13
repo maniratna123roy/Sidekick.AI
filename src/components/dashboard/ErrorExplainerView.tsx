@@ -8,7 +8,6 @@ const ErrorExplainerView = ({ initialRepo: repoName, repoId }: { initialRepo: st
     const [trace, setTrace] = useState('');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [result, setResult] = useState<any>(null);
-    const [result, setResult] = useState<any>(null);
 
     const handleAnalyze = async () => {
         if (!trace.trim()) return;

@@ -161,10 +161,18 @@ const LogicVizView = ({ repoName, repoId }: { repoName: string, repoId?: string 
 
                     <div className="flex flex-wrap items-center gap-4">
                         <div className="flex flex-col gap-1.5">
-                            <label className="text-[10px] font-mono uppercase text-muted-foreground ml-1">Current Repository</label>
-                            <div className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-300 font-mono">
-                                {repoName}
-                            </div>
+                            <label className="text-[10px] font-mono uppercase text-muted-foreground ml-1">Select logic source</label>
+                            <select
+                                value={selectedFile}
+                                onChange={(e) => setSelectedFile(e.target.value)}
+                                className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs focus:ring-1 ring-primary outline-none min-w-[200px]"
+                                disabled={isFetchingFiles || loading}
+                            >
+                                <option value="" disabled>Choose a file...</option>
+                                {files.map(file => (
+                                    <option key={file} value={file} className="bg-[#0f0f0f]">{file}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="flex flex-col gap-1.5">
