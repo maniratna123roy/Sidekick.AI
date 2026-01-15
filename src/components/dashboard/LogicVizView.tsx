@@ -45,14 +45,24 @@ const LogicVizView = ({ repoName, repoId, repoUrl }: { repoName: string, repoId?
 
             try {
                 const response = await api.getFiles(repoName, repoId);
-                setFiles(response.files || []);
+                const filesList = response.files || [];
+
+                if (filesList.length === 0 && repoUrl && !restoring) {
+                    throw new Error('Repository context not found');
+                }
+
+                setFiles(filesList);
             } catch (err: any) {
-                if (err.message && err.message.toLowerCase().includes('repository not found') && repoUrl) {
+                const isNotFoundError = err.message && (
+                    err.message.toLowerCase().includes('not found') ||
+                    err.message.toLowerCase().includes('context not found')
+                );
+
+                if (isNotFoundError && repoUrl) {
                     setRestoring(true);
                     try {
                         await api.indexRepo(repoUrl);
-                        const retryResponse = await api.getFiles(repoName, repoId);
-                        setFiles(retryResponse.files || []);
+                        setRetryKey(k => k + 1);
                     } catch (restoreError) {
                         toast.error("Restoration failed");
                     } finally {
@@ -178,6 +188,42 @@ const LogicVizView = ({ repoName, repoId, repoUrl }: { repoName: string, repoId?
 
     return (
         <div className="flex-1 flex flex-col h-full bg-[#050505]">
+            <AnimatePresence>
+                {isFetchingFiles && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md"
+                    >
+                        <div className="glass-panel p-12 rounded-3xl border-white/5 bg-black/40 text-center space-y-6 max-w-sm">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-primary/20 blur-2xl animate-pulse rounded-full" />
+                                <Loader2 className="w-12 h-12 text-primary animate-spin relative mx-auto" />
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-bold">{restoring ? 'Initializing Repo...' : 'Loading Logic Engine...'}</h3>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    {restoring ? 'Recovering files from database/source...' : 'Fetching available files and logic structures.'}
+                                </p>
+                            </div>
+                            {tookTooLong && (
+                                <div className="pt-2 animate-in fade-in slide-in-from-bottom-4">
+                                    <p className="text-[10px] text-amber-500 font-mono uppercase mb-4 tracking-tighter">Took longer than 3s...</p>
+                                    <Button
+                                        size="sm"
+                                        className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30"
+                                        onClick={() => setRetryKey(k => k + 1)}
+                                    >
+                                        Force Restore
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <div className="p-8 border-b border-white/5 bg-black/20 backdrop-blur-xl">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="space-y-2">

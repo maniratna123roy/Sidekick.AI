@@ -46,11 +46,14 @@ const KnowledgeGraph = ({ repoName, repoId, repoUrl }: { repoName: string, repoI
                 const response = await api.getFiles(repoName, repoId);
                 const files = response.files;
 
+                if ((!files || files.length === 0) && repoUrl && !restoring) {
+                    throw new Error('Repository context not found');
+                }
+
                 const nodes: GraphNode[] = [];
                 const links: GraphLink[] = [];
                 const seenPaths = new Set<string>();
 
-                // Root node
                 nodes.push({ id: 'root', label: repoName, type: 'folder' });
                 seenPaths.add('root');
 
@@ -83,12 +86,15 @@ const KnowledgeGraph = ({ repoName, repoId, repoUrl }: { repoName: string, repoI
                 setExpandedFolders(new Set(['root']));
                 setError(null);
             } catch (err: any) {
-                if (err.message && err.message.toLowerCase().includes('repository not found') && repoUrl) {
+                const isNotFoundError = err.message && (
+                    err.message.toLowerCase().includes('not found') ||
+                    err.message.toLowerCase().includes('context not found')
+                );
+
+                if (isNotFoundError && repoUrl) {
                     setRestoring(true);
                     try {
                         await api.indexRepo(repoUrl);
-                        const retryResponse = await api.getFiles(repoName, repoId);
-                        // Recursive call or just logic here
                         setRetryCount(prev => prev + 1);
                     } catch (restoreError: any) {
                         setError(`Restoration failed: ${restoreError.message}`);
@@ -161,9 +167,31 @@ const KnowledgeGraph = ({ repoName, repoId, repoUrl }: { repoName: string, repoI
 
     if (loading) {
         return (
-            <div className="h-full flex flex-col items-center justify-center space-y-4">
-                <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                <p className="text-sm font-mono uppercase tracking-widest text-muted-foreground">Mapping Codebase Architecture...</p>
+            <div className="h-full flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm relative z-20">
+                <div className="glass-panel p-12 rounded-3xl border-white/5 bg-black/40 text-center space-y-6 max-w-sm">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-primary/20 blur-2xl animate-pulse rounded-full" />
+                        <Loader2 className="w-12 h-12 text-primary animate-spin relative mx-auto" />
+                    </div>
+                    <div className="space-y-2">
+                        <h3 className="text-xl font-bold">{restoring ? 'Restoring Architecture...' : 'Mapping Codebase...'}</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                            {restoring ? 'Retrieving code structure from source...' : 'AI is decoding your repository to build the dependency map.'}
+                        </p>
+                    </div>
+                    {tookTooLong && (
+                        <div className="pt-2 animate-in fade-in slide-in-from-bottom-4">
+                            <p className="text-[10px] text-amber-500 font-mono uppercase mb-4 tracking-tighter">Took longer than 3s...</p>
+                            <Button
+                                size="sm"
+                                className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30"
+                                onClick={() => setRetryCount(prev => prev + 1)}
+                            >
+                                Force Restoration
+                            </Button>
+                        </div>
+                    )}
+                </div>
             </div>
         );
     }
@@ -186,29 +214,6 @@ const KnowledgeGraph = ({ repoName, repoId, repoUrl }: { repoName: string, repoI
     return (
         <div className="h-full w-full relative group flex">
             <div className="flex-1 relative overflow-hidden">
-                {loading && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                        <div className="glass-panel p-8 rounded-2xl border-white/5 bg-black/40 max-w-sm text-center space-y-4">
-                            <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
-                            <div className="space-y-2">
-                                <h3 className="font-bold">{restoring ? 'Restoring Repository...' : 'Building Map...'}</h3>
-                                <p className="text-xs text-muted-foreground">{restoring ? 'Synchronizing files from database/source...' : 'Scanning files and generating your codebase architecture.'}</p>
-                            </div>
-                            {tookTooLong && (
-                                <div className="pt-4 space-y-3 animate-in fade-in slide-in-from-bottom-4">
-                                    <p className="text-[10px] text-amber-500 font-mono uppercase">Taking longer than 3s...</p>
-                                    <Button
-                                        size="sm"
-                                        className="w-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 border-amber-500/30"
-                                        onClick={() => setRetryCount(prev => prev + 1)}
-                                    >
-                                        Force Restore
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
                 {/* Controls HUD */}
                 <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
                     <div className="glass-panel bg-black/40 p-1 rounded-xl border border-white/5 flex flex-col gap-1 backdrop-blur-md">
