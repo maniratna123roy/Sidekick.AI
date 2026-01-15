@@ -120,19 +120,7 @@ const Dashboard = ({ activeTab = 'overview' }: { activeTab?: string }) => {
         setIsIndexing(true);
         try {
             const result = await api.indexRepo(repoUrl, user.id);
-
-            // Save to Supabase (if not already there or to update)
-            const { data: savedData, error: dbError } = await (supabase as any)
-                .from('indexed_repositories')
-                .upsert([{
-                    user_id: user.id,
-                    repo_url: repoUrl,
-                    repo_name: result.repo
-                }], { onConflict: 'user_id,repo_name' })
-                .select();
-
-            if (dbError) throw dbError;
-            const repoId = savedData?.[0]?.id || result.repoId;
+            const repoId = result.repoId;
 
             toast({
                 title: "Indexing Complete",

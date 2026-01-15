@@ -35,15 +35,32 @@ router.post('/index', async (req, res) => {
     // 2. Fetch or Create Record in Supabase to get repoId
     let repoId;
     if (userId) {
-      const { data, error: dbError } = await supabase
+      const { data: existing, error: fetchError } = await supabase
         .from('indexed_repositories')
         .select('id')
         .eq('user_id', userId)
         .eq('repo_name', repoName)
-        .single();
+        .maybeSingle();
 
-      if (!dbError && data) {
-        repoId = data.id;
+      if (existing) {
+        repoId = existing.id;
+      } else {
+        const { data: created, error: createError } = await supabase
+          .from('indexed_repositories')
+          .insert([{
+            user_id: userId,
+            repo_name: repoName,
+            repo_url: url,
+            is_active: true
+          }])
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('[Indexer] Failed to create repo record:', createError.message);
+        } else {
+          repoId = created.id;
+        }
       }
     }
 
