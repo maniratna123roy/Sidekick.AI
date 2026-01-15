@@ -207,13 +207,17 @@ const LogicVizView = ({ repoName, repoId, repoUrl }: { repoName: string, repoId?
                                     {restoring ? 'Recovering files from database/source...' : 'Fetching available files and logic structures.'}
                                 </p>
                             </div>
-                            {tookTooLong && (
+                            {tookTooLong && !restoring && (
                                 <div className="pt-2 animate-in fade-in slide-in-from-bottom-4">
                                     <p className="text-[10px] text-amber-500 font-mono uppercase mb-4 tracking-tighter">Took longer than 3s...</p>
                                     <Button
                                         size="sm"
                                         className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30"
-                                        onClick={() => setRetryKey(k => k + 1)}
+                                        onClick={() => {
+                                            setRetryKey(k => k + 1);
+                                            setTookTooLong(false);
+                                        }}
+                                        disabled={restoring}
                                     >
                                         Force Restore
                                     </Button>

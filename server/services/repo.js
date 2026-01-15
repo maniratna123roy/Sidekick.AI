@@ -13,6 +13,8 @@ if (!fs.existsSync(REPO_STORAGE_PATH)) {
     fs.mkdirSync(REPO_STORAGE_PATH, { recursive: true });
 }
 
+const locks = new Map();
+
 /**
  * Clone a repository
  * @param {string} repoUrl - GitHub URL
@@ -23,16 +25,42 @@ async function cloneRepository(repoUrl) {
     const repoName = repoUrl.split('/').slice(-2).join('_').replace('.git', '').toLowerCase();
     const localPath = path.join(REPO_STORAGE_PATH, repoName);
 
-    if (fs.existsSync(localPath)) {
-        // If exists, pull latest
-        const git = simpleGit(localPath);
-        await git.pull();
-    } else {
-        // Clone new
-        await simpleGit().clone(repoUrl, localPath);
+    // Concurrency Lock: prevent multiple simultaneous operations on the same repo
+    if (locks.has(repoName)) {
+        await locks.get(repoName);
     }
 
-    return { localPath, repoName };
+    let resolveLock;
+    const lockPromise = new Promise(resolve => { resolveLock = resolve; });
+    locks.set(repoName, lockPromise);
+
+    try {
+        if (fs.existsSync(localPath)) {
+            // Check if it's a valid git repo
+            if (fs.existsSync(path.join(localPath, '.git'))) {
+                try {
+                    const git = simpleGit(localPath);
+                    await git.pull();
+                } catch (pullError) {
+                    console.warn(`[RepoService] Pull failed for ${repoName}, attempting fresh clone:`, pullError.message);
+                    fs.rmSync(localPath, { recursive: true, force: true });
+                    await simpleGit().clone(repoUrl, localPath);
+                }
+            } else {
+                console.warn(`[RepoService] ${repoName} directory exists but no .git found, re-cloning.`);
+                fs.rmSync(localPath, { recursive: true, force: true });
+                await simpleGit().clone(repoUrl, localPath);
+            }
+        } else {
+            // Clone new
+            await simpleGit().clone(repoUrl, localPath);
+        }
+
+        return { localPath, repoName };
+    } finally {
+        locks.delete(repoName);
+        resolveLock();
+    }
 }
 
 /**

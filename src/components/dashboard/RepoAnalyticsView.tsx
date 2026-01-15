@@ -16,6 +16,7 @@ const RepoAnalyticsView = ({ repoName, repoUrl, repoId }: { repoName: string, re
     const [loading, setLoading] = useState(true);
     const [restoring, setRestoring] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [retryCount, setRetryCount] = useState(0);
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -27,10 +28,11 @@ const RepoAnalyticsView = ({ repoName, repoUrl, repoId }: { repoName: string, re
                 setError(null);
             } catch (err: any) {
                 // Auto-repair: If repo not found (ephemeral storage wiped) and we have the URL, re-index it.
-                if (err.message && err.message.toLowerCase().includes('repository not found') && repoUrl) {
+                const isNotFound = err.message && err.message.toLowerCase().includes('repository not found');
+                if (isNotFound && repoUrl && !restoring) {
                     setRestoring(true);
                     try {
-                        // Re-index silently
+                        // Re-index
                         await api.indexRepo(repoUrl);
                         // Retry analytics fetch
                         const retryResult = await api.getAnalytics(repoName, repoId);
@@ -40,26 +42,27 @@ const RepoAnalyticsView = ({ repoName, repoUrl, repoId }: { repoName: string, re
                         setError(`Restoration failed: ${restoreError.message}`);
                     } finally {
                         setRestoring(false);
-                        setLoading(false);
                     }
                 } else {
                     setError(err.message);
-                    setLoading(false);
                 }
             } finally {
-                if (!restoring) setLoading(false);
+                setLoading(false);
             }
         };
 
         fetchAnalytics();
-    }, [repoName, repoUrl]);
+    }, [repoName, repoUrl, retryCount]);
 
-    if (loading) {
+    if (loading || restoring) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center p-8 bg-black/40 backdrop-blur-sm">
-                <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+                <div className="relative mb-6">
+                    <div className="absolute inset-0 bg-primary/20 blur-2xl animate-pulse rounded-full" />
+                    <Loader2 className="w-12 h-12 text-primary animate-spin relative" />
+                </div>
                 <p className="text-muted-foreground font-mono animate-pulse uppercase tracking-widest text-xs">
-                    {restoring ? `Restoring ${repoName} from Source...` : 'Processing Repository Bio-metrics...'}
+                    {restoring ? `Synchronizing ${repoName}...` : 'Processing Bio-metrics...'}
                 </p>
             </div>
         );
@@ -68,9 +71,20 @@ const RepoAnalyticsView = ({ repoName, repoUrl, repoId }: { repoName: string, re
     if (error || !data) {
         return (
             <div className="flex-1 flex items-center justify-center p-8">
-                <div className="text-center space-y-4 max-w-md p-8 glass-panel border-red-500/20 bg-red-500/5 rounded-2xl">
-                    <p className="text-red-400 font-mono text-sm tracking-wider italic">Analysis Failure: {error || 'No context found'}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">Ensure the repository is indexed and your sidekick is properly connected.</p>
+                <div className="text-center space-y-6 max-w-md p-8 glass-panel border-red-500/20 bg-red-500/5 rounded-2xl">
+                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Zap className="w-8 h-8 text-red-500" />
+                    </div>
+                    <div className="space-y-2">
+                        <p className="text-red-400 font-mono text-sm tracking-wider italic">Analysis Failure: {error || 'No context found'}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">Ensure the repository is public and indexed correctly. If this persists, try re-initializing.</p>
+                    </div>
+                    <button
+                        onClick={() => setRetryCount(prev => prev + 1)}
+                        className="w-full py-2 px-4 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-mono transition-all uppercase tracking-widest"
+                    >
+                        Retry Analysis
+                    </button>
                 </div>
             </div>
         );
