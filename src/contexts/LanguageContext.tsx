@@ -15,7 +15,6 @@ const translations: Translations = {
   'nav.home': { en: 'Home', hi: 'होम', es: 'Inicio' },
   'nav.howItWorks': { en: 'How It Works', hi: 'कैसे काम करता है', es: 'Cómo Funciona' },
   'nav.features': { en: 'Features', hi: 'विशेषताएं', es: 'Características' },
-  'nav.demo': { en: 'Demo', hi: 'डेमो', es: 'Demo' },
   'nav.styleGuide': { en: 'Style Guide', hi: 'स्टाइल गाइड', es: 'Guía de Estilo' },
   'nav.signIn': { en: 'Sign In', hi: 'साइन इन', es: 'Iniciar Sesión' },
 
@@ -33,10 +32,6 @@ const translations: Translations = {
   // How it works
   'how.title': { en: 'How Sidekick Works', hi: 'Sidekick कैसे काम करता है', es: 'Cómo Funciona Sidekick' },
   'how.subtitle': { en: 'From repo to answers in seconds', hi: 'रेपो से जवाब तक सेकंडों में', es: 'Del repositorio a respuestas en segundos' },
-
-  // Demo
-  'demo.title': { en: 'Try It Now', hi: 'अभी आज़माएं', es: 'Pruébalo Ahora' },
-  'demo.subtitle': { en: 'Experience the power of AI-driven code exploration', hi: 'AI-संचालित कोड अन्वेषण की शक्ति का अनुभव करें', es: 'Experimenta el poder de la exploración de código con IA' },
 
   // Signup
   'signup.title': { en: 'Request Early Access', hi: 'जल्दी एक्सेस का अनुरोध करें', es: 'Solicitar Acceso Anticipado' },

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { 
-  ArrowRight, Search, FileCode, GitBranch, Globe, Zap, Code, 
+import {
+  ArrowRight, Search, FileCode, GitBranch, Globe, Zap, Code,
   Shield, Clock, Layers, Terminal, BookOpen, Workflow
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -92,9 +92,8 @@ const Features = () => {
           <div className="space-y-24">
             {mainFeatures.map((feature, i) => (
               <ScrollReveal key={i} delay={i * 100}>
-                <div className={`flex flex-col lg:flex-row items-center gap-12 ${
-                  i % 2 === 1 ? 'lg:flex-row-reverse' : ''
-                }`}>
+                <div className={`flex flex-col lg:flex-row items-center gap-12 ${i % 2 === 1 ? 'lg:flex-row-reverse' : ''
+                  }`}>
                   {/* Content */}
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-4">
@@ -201,12 +200,12 @@ const Features = () => {
                 className="text-2xl md:text-4xl font-bold text-foreground mb-4"
               />
               <p className="text-muted-foreground mb-8">
-                Try our interactive demo or request early access today
+                Request early access or sign in to start exploring today
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link to="/demo">
+                <Link to="/auth">
                   <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 border-glow gap-2 px-8">
-                    Try Demo
+                    Sign In
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>

@@ -87,9 +87,8 @@ const HowItWorks = () => {
 
             {steps.map((step, i) => (
               <ScrollReveal key={i} delay={i * 100}>
-                <div className={`relative flex flex-col md:flex-row items-start gap-8 mb-16 ${
-                  i % 2 === 1 ? 'md:flex-row-reverse' : ''
-                }`}>
+                <div className={`relative flex flex-col md:flex-row items-start gap-8 mb-16 ${i % 2 === 1 ? 'md:flex-row-reverse' : ''
+                  }`}>
                   {/* Number indicator */}
                   <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-16 h-16 rounded-full glass-panel border-primary/30 items-center justify-center z-10">
                     <span className="font-mono text-lg text-primary font-bold">{step.number}</span>
@@ -145,7 +144,7 @@ const HowItWorks = () => {
               </h3>
               <div className="bg-muted/50 rounded-xl p-8 border border-dashed border-border">
                 <pre className="text-xs md:text-sm font-mono text-muted-foreground text-left overflow-x-auto">
-{`┌─────────────────────────────────────────────────────────────────┐
+                  {`┌─────────────────────────────────────────────────────────────────┐
 │                        User Interface                           │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐        │
 │  │   Query  │  │ Response │  │ Diagrams │  │  Links   │        │
@@ -198,12 +197,12 @@ const HowItWorks = () => {
               className="text-2xl md:text-4xl font-bold text-foreground mb-6"
             />
             <p className="text-muted-foreground mb-8">
-              Experience the power of AI-driven code exploration firsthand
+              Experience the power of AI-driven code exploration today
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/demo">
+              <Link to="/auth">
                 <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 border-glow gap-2 px-8">
-                  Try Interactive Demo
+                  Get Started
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
