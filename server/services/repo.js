@@ -88,6 +88,17 @@ async function getCodeFiles(directory) {
  */
 async function syncRepoToDatabase(repoId, localPath) {
     console.log(`[RepoSync] Starting sync for repoId: ${repoId}`);
+
+    // 1. Delete existing files for this repo to ensure a clean state and avoid constraint errors
+    const { error: deleteError } = await supabase
+        .from('repository_files')
+        .delete()
+        .eq('repo_id', repoId);
+
+    if (deleteError) {
+        console.error(`[RepoSync] Failed to clear existing files for ${repoId}:`, deleteError.message);
+    }
+
     const files = await getCodeFiles(localPath);
 
     // Process in batches to avoid overwhelming Supabase
@@ -107,10 +118,10 @@ async function syncRepoToDatabase(repoId, localPath) {
 
         const { error } = await supabase
             .from('repository_files')
-            .upsert(records, { onConflict: 'repo_id,path' });
+            .insert(records);
 
         if (error) {
-            console.error(`[RepoSync] Error syncing batch starting at ${i}:`, error.message);
+            console.error(`[RepoSync] Error inserting batch starting at ${i}:`, error.message);
         }
     }
     console.log(`[RepoSync] Sync complete for repoId: ${repoId}. Total files: ${files.length}`);
