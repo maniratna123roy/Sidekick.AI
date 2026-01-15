@@ -277,5 +277,6 @@ module.exports = {
     chunkCode,
     getDependencyGraph,
     getRepoFiles,
-    getFileContent
+    getFileContent,
+    syncRepoToDatabase
 };
