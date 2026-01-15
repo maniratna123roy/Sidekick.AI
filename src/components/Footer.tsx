@@ -8,7 +8,7 @@ const Footer = () => {
   const productLinks = [
     { label: t('nav.features'), path: '/features' },
     { label: t('nav.howItWorks'), path: '/how-it-works' },
-    { label: t('nav.demo'), path: '/demo' },
+    { label: t('nav.howItWorks'), path: '/how-it-works' },
     { label: 'Pricing', path: '/signup' },
   ];
 

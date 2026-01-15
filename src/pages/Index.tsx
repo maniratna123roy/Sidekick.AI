@@ -89,7 +89,7 @@ const Index = () => {
           {/* CTA Buttons */}
           <ScrollReveal delay={800}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/demo">
+              <Link to="/auth">
                 <Button size="lg" variant="retro-3d" className="gap-2 px-8 h-12">
                   {t('hero.cta')}
                   <ArrowRight className="w-4 h-4" />
@@ -154,70 +154,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Code Preview Section */}
-      <section className="py-24 md:py-32 px-4 md:px-8">
-        <div className="container max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <FunnelText
-              text="See It In Action"
-              as="h2"
-              className="text-3xl md:text-4xl font-bold text-foreground mb-4"
-            />
-            <ScrollReveal delay={200}>
-              <p className="text-muted-foreground max-w-lg mx-auto">
-                Watch how Sidekick analyzes repositories and answers your questions
-              </p>
-            </ScrollReveal>
-          </div>
-
-          <ScrollReveal delay={300}>
-            <div className="glass-panel overflow-hidden">
-              {/* Terminal header */}
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50 bg-muted/30">
-                <div className="w-3 h-3 rounded-full bg-destructive/60" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                <div className="w-3 h-3 rounded-full bg-green-500/60" />
-                <span className="ml-4 font-mono text-xs text-muted-foreground">sidekick query</span>
-              </div>
-
-              {/* Terminal content */}
-              <div className="p-6 font-mono text-sm">
-                <div className="flex items-start gap-2 text-muted-foreground mb-4">
-                  <span className="text-primary">$</span>
-                  <span>sidekick ask "How does the auth middleware work?"</span>
-                </div>
-                <div className="space-y-2 text-foreground/80">
-                  <p className="text-muted-foreground">Analyzing repository...</p>
-                  <p className="text-muted-foreground">Found 3 relevant files</p>
-                  <p className="mt-4">
-                    <span className="text-primary">→</span> The authentication middleware in{' '}
-                    <span className="text-accent">src/middleware/auth.ts</span> uses JWT tokens
-                    to verify user sessions. It checks the Authorization header and validates
-                    against the secret key defined in your environment.
-                  </p>
-                  <p className="mt-2">
-                    <span className="text-primary">📁</span>{' '}
-                    <span className="text-primary underline cursor-pointer">
-                      src/middleware/auth.ts:24-58
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          </ScrollReveal>
-
-          <ScrollReveal delay={500}>
-            <div className="text-center mt-10">
-              <Link to="/demo">
-                <Button size="lg" variant="outline" className="border-primary/30 hover:bg-primary/10 gap-2">
-                  Try Interactive Demo
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-24 md:py-32 px-4 md:px-8">
@@ -236,7 +172,7 @@ const Index = () => {
                 <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
                   Join thousands of developers using Sidekick to understand complex repositories in seconds.
                 </p>
-                <Link to="/demo">
+                <Link to="/auth">
                   <Button size="lg" variant="retro-3d" className="gap-2 px-10 h-12">
                     Try It Now
                     <ArrowRight className="w-4 h-4" />

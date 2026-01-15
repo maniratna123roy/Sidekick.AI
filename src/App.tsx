@@ -7,7 +7,6 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "./pages/Index";
 import HowItWorks from "./pages/HowItWorks";
 import Features from "./pages/Features";
-import Demo from "./pages/Demo";
 import StyleGuide from "./pages/StyleGuide";
 import Animations from "./pages/Animations";
 import Auth from "./pages/Auth";
@@ -27,7 +26,6 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/features" element={<Features />} />
-            <Route path="/demo" element={<Demo />} />
             <Route path="/style-guide" element={<StyleGuide />} />
             <Route path="/animations" element={<Animations />} />
             <Route path="/auth" element={<Auth />} />
