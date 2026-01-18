@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Github } from 'lucide-react';
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5 mr-3">
@@ -28,6 +28,7 @@ const GoogleIcon = () => (
     />
   </svg>
 );
+
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const Auth = () => {
@@ -37,6 +38,7 @@ const Auth = () => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [githubLoading, setGithubLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -127,6 +129,30 @@ const Auth = () => {
     }
   };
 
+  const handleGithubAuth = async () => {
+    setGithubLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/auth`,
+          skipBrowserRedirect: true,
+        },
+      });
+      if (error) throw error;
+      if (!data?.url) throw new Error('No OAuth URL returned');
+
+      window.location.href = data.url;
+    } catch (error: any) {
+      toast({
+        title: 'GitHub sign-in error',
+        description: error.message,
+        variant: 'destructive',
+      });
+      setGithubLoading(false);
+    }
+  };
+
   return (
     <Layout>
       <section className="min-h-screen flex items-center justify-center pt-32 pb-20 px-4">
@@ -143,16 +169,29 @@ const Auth = () => {
               </p>
             </div>
 
-            {/* Google Auth Button */}
-            <Button
-              onClick={handleGoogleAuth}
-              disabled={googleLoading}
-              variant="outline"
-              className="w-full mb-6 h-12 border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all"
-            >
-              <GoogleIcon />
-              {googleLoading ? 'Connecting...' : 'Continue with Google'}
-            </Button>
+            <div className="space-y-3 mb-6">
+              {/* Google Auth Button */}
+              <Button
+                onClick={handleGoogleAuth}
+                disabled={googleLoading || githubLoading}
+                variant="outline"
+                className="w-full h-12 border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all"
+              >
+                <GoogleIcon />
+                {googleLoading ? 'Connecting...' : 'Continue with Google'}
+              </Button>
+
+              {/* GitHub Auth Button */}
+              <Button
+                onClick={handleGithubAuth}
+                disabled={githubLoading || googleLoading}
+                variant="outline"
+                className="w-full h-12 border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all"
+              >
+                <Github className="w-5 h-5 mr-3" />
+                {githubLoading ? 'Connecting...' : 'Continue with GitHub'}
+              </Button>
+            </div>
 
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center">
